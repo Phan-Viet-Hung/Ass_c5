@@ -1,0 +1,109 @@
+﻿@model C5.Models.Login
+
+@{
+    ViewData["Title"] = "Đăng Nhập";
+    var login = TempData["Login"];
+}
+<link rel="stylesheet" href="~/css/Login.css" asp-append-version="true" />
+@* <style>
+    body {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .login-container {
+        width: 380px;
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+     @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .login-container h3 {
+        font-weight: bold;
+        margin-bottom: 20px;
+        color: #333;
+    }
+
+    .form-control {
+        border-radius: 8px;
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .btn-login {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border: none;
+        padding: 10px;
+        font-size: 16px;
+        border-radius: 8px;
+        color: white;
+        transition: 0.3s;
+    }
+
+    .btn-login:hover {
+        background: linear-gradient(135deg, #5a67d8, #6b46c1);
+    }
+
+    .forgot-password {
+        font-size: 14px;
+        display: block;
+        margin-top: 10px;
+    }
+
+    .forgot-password a {
+        text-decoration: none;
+        color: #667eea;
+        font-weight: bold;
+    }
+
+    .forgot-password a:hover {
+        text-decoration: underline;
+    }
+</style> *@
+
+<div class="container">
+<div class="login-container">
+    <h2>@login</h2>
+    <h3>Đăng Nhập</h3>
+
+    <form asp-action="Login" asp-controller="Account" method="post">
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label">Email</label>
+            <input asp-for="Email" class="form-control" placeholder="Nhập email của bạn">
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Password" class="form-label">Mật khẩu</label>
+            <input asp-for="Password" type="password" class="form-control" placeholder="Nhập mật khẩu">
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-login w-100">Đăng nhập</button>
+
+        <div class="forgot-password">
+            <a href="#">Quên mật khẩu?</a>
+        </div>
+    </form>
+</div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

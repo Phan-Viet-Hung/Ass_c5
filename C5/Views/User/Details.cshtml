@@ -1,0 +1,43 @@
+﻿@model dynamic
+
+<h2>Thông tin người dùng</h2>
+
+<p><strong>Tên đầy đủ:</strong> @Model.FullName</p>
+<p><strong>Email:</strong> @Model.Email</p>
+<p><strong>Ngày sinh:</strong> @Model.DateOfBirth.ToShortDateString()</p>
+<p><strong>Ngày tạo:</strong> @Model.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</p>
+<p><strong>Số lượng đơn hàng đã đặt:</strong> @Model.TotalOrders</p>
+
+<h3>Quyền người dùng</h3>
+@if (Model.Roles.Count > 0)
+{
+    <ul>
+        @foreach (var role in Model.Roles)
+        {
+            <li>@role</li>
+        }
+    </ul>
+}
+else
+{
+    <p>Người dùng chưa có quyền nào.</p>
+}
+
+<h3>Danh sách bài đánh giá</h3>
+@if (Model.Reviews.Count > 0)
+{
+    <ul>
+        @foreach (var review in Model.Reviews)
+        {
+            <li>
+                <p><strong>ID:</strong> @review.Id</p>
+                <p><strong>Nội dung:</strong> @review.Content</p>
+                <p><strong>Đánh giá:</strong> @review.Rating/5</p>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p>Không có đánh giá nào.</p>
+}

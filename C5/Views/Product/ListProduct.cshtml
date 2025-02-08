@@ -1,0 +1,58 @@
+﻿@model List<C5.Models.Product>
+@{
+    ViewData["Title"] = "Quản lý sản phẩm";
+}
+
+<h2 class="text-center">Quản lý sản phẩm</h2>
+<a asp-action="Create" class="btn btn-primary mb-3">Thêm sản phẩm</a>
+
+<table class="table table-bordered table-hover text-center">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Tên sản phẩm</th>
+            <th>Giá</th>
+            <th>Hình ảnh</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var product in Model)
+        {
+            <tr>
+                <td>@product.Id</td>
+                <td>@product.Name</td>
+                <td>@product.Price.ToString("C")</td>
+                <td>
+                    <img src="@product.Image" alt="Hình ảnh" class="product-img" />
+                </td>
+                <td>
+                    <span class="badge @(product.IsActive ? "bg-success" : "bg-danger")">
+                        @product.StatusText
+                    </span>
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@product.Id" class="btn btn-warning btn-sm">Sửa</a>
+                    <a asp-action="ToggleStatus" asp-route-id="@product.Id" class="btn btn-secondary btn-sm">
+                        @(product.IsActive ? "Ẩn" : "Hiển thị")
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<style>
+    .product-img {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+    }
+
+    .btn-sm {
+        margin: 2px;
+    }
+</style>

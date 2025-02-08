@@ -1,0 +1,46 @@
+﻿@model List<C5.Models.FastFoodUser>
+@{
+    var notfound = TempData["NotFound"];
+}
+<h2>@notfound</h2>
+<h2>Danh sách người dùng</h2>
+
+<a asp-controller="Account" asp-action="Create" class="btn btn-outline-dark">Tạo mới người dùng</a>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>STT</th>
+            <th>Họ và Tên</th>
+            <th>Email</th>
+            <th>Số điện thoại</th>
+            <th>Ngày tạo</th>
+            <th>Chức năng</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model != null && Model.Any())
+        {
+            int stt = 1;
+            @foreach (var user in Model)
+            {
+                <tr>
+                    <td>@stt</td>
+                    <td>@user.FullName</td>
+                    <td>@user.Email</td>
+                    <td>@user.PhoneNumber</td>
+                    <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        <a asp-route-id="@user.Id" asp-controller="User" asp-action="Details" class="btn btn-success">Chi tiết</a>
+                        <a asp-route-id="@user.Id" asp-controller="User" asp-action="Edit" class="btn btn-warning">Sửa</a>
+                        <a asp-route-id="@user.Id" asp-controller="User" asp-action="Delete" class="btn btn-danger">Xóa</a>
+                    </td>
+                </tr>
+                stt++;
+            }
+        }
+        else
+        {
+            <tr><td colspan="5">Không có người dùng nào</td></tr>
+        }
+    </tbody>
+</table>
