@@ -14,8 +14,7 @@ namespace C5.Models
         [StringLength(100, ErrorMessage = "Tên sản phẩm không được vượt quá 100 ký tự.")]
         public string Name { get; set; }
 
-        [Required]
-        public string CategoryId { get; set; }
+        public string? CategoryId { get; set; }
 
         [Required(ErrorMessage = "Giá sản phẩm không được để trống.")]
         [Range(0, double.MaxValue, ErrorMessage = "Giá sản phẩm phải lớn hơn hoặc bằng 0.")]
@@ -41,8 +40,8 @@ namespace C5.Models
             }
         }
 
-        [Required]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"));
+
 
         [ForeignKey(nameof(CategoryId))]
         public virtual Category Category { get; set; }

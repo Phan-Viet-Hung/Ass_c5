@@ -39,7 +39,7 @@
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Product" asp-action="Index">Quản lý sản phẩm</a>
+                                <a class="nav-link text-dark" asp-controller="Product" asp-action="ListProduct">Quản lý sản phẩm</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="Order" asp-action="Index">Quản lý đơn hàng</a>
@@ -85,6 +85,21 @@
             </div>
         </nav>
     </header>
+    
+    <div class="container mt-3">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">@TempData["Success"]</div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">@TempData["Error"]</div>
+        }
+        @if (TempData["Login"] != null)
+        {
+            <div class="alert alert-success text-center text-black">@TempData["Login"]</div>
+        }
+    </div>
 
 
     <div class="container">
