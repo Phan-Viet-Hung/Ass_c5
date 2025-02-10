@@ -32,8 +32,6 @@ namespace C5.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Create(CreateUserViewModel model)
         {
-            if (ModelState.IsValid)
-            {
                 var user = new FastFoodUser
                 {
                     Id = Guid.NewGuid().ToString(), // Tạo Id trước để dùng cho cả User và Cart
@@ -63,7 +61,6 @@ namespace C5.Controllers
                 {
                     ModelState.AddModelError("", item.Description);
                 }
-            }
             return View(model);
         }
 

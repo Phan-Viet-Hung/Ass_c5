@@ -1,0 +1,44 @@
+﻿@* @model C5.Models.ViewModels.VoucherListViewModel
+
+<h2>Danh sách Voucher</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Mã Voucher</th>
+            <th>Giảm giá (%)</th>
+            <th>Ngày hết hạn</th>
+            <th>Số lượng</th>
+            <th>Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var voucher in Model.Vouchers)
+        {
+            <tr>
+                <td>@voucher.Code</td>
+                <td>@voucher.DiscountPercent%</td>
+                <td>@voucher.EndDate.ToString("dd/MM/yyyy")</td>
+                <td>@voucher.Quantity</td>
+                <td>
+                    <a href="@Url.Action("EditVoucher", "Admin", new { id = voucher.Id })" class="btn btn-warning btn-sm">Sửa</a>
+                    <a href="@Url.Action("DeleteVoucher", "Admin", new { id = voucher.Id })" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa voucher này?');">Xóa</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Phân trang -->
+<nav>
+    <ul class="pagination">
+        @for (int i = 1; i <= Model.TotalPages; i++)
+        {
+            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                <a class="page-link" href="@Url.Action("ListVoucher", new { page = i })">@i</a>
+            </li>
+        }
+    </ul>
+</nav>
+
+ *@

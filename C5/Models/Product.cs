@@ -44,7 +44,7 @@ namespace C5.Models
 
 
         [ForeignKey(nameof(CategoryId))]
-        public virtual Category Category { get; set; }
+        public virtual Category? Category { get; set; }
 
         public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
         public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
