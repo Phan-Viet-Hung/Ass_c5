@@ -17,6 +17,7 @@ namespace C5.Models
 
         [DataType(DataType.DateTime)]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public string Address { get; set; }
 
         public virtual Cart Cart { get; set; }
         public virtual ICollection<Order> Orders { get; set; } = new List<Order>();

@@ -3,6 +3,8 @@ using C5.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using X.PagedList;
+using X.PagedList.Extensions;
 
 namespace C5.Controllers
 {
@@ -17,10 +19,15 @@ namespace C5.Controllers
 
         // Lấy danh sách sản phẩm
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> ListProduct()
+        public async Task<ActionResult<IEnumerable<Product>>> ListProduct(int? page)
         {
-            var products = await _context.Products.ToListAsync();
-            return View(products);
+            int pageNumber = page ?? 1; // Trang mặc định là 1
+            int pageSize = 5; // Số sản phẩm trên mỗi trang
+
+            var products = await _context.Products.OrderBy(p => p.Name).ToListAsync(); // Load danh sách trước
+            var pagedProducts = products.ToPagedList(pageNumber, pageSize); // Sau đó phân trang
+
+            return View(pagedProducts);
         }
 
         // Lấy thông tin một sản phẩm theo ID

@@ -1,0 +1,8 @@
+﻿<h2>⏳ Đang xử lý đơn hàng...</h2>
+<p>Hệ thống sẽ tự động chuyển đến trang xác nhận...</p>
+
+<script>
+    setTimeout(function () {
+        window.location.href = '@Url.Action("OrderSuccess", "Order", new { orderId = Model.OrderId })';
+    }, 2000);
+</script>

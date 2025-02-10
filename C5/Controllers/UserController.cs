@@ -19,7 +19,7 @@ namespace C5.Controllers
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> ListUser()
         {
             var users = await _userManager.Users.ToListAsync();
             return View(users);
@@ -50,6 +50,7 @@ namespace C5.Controllers
                 user.Email,
                 user.DateOfBirth,
                 user.CreatedAt,
+                user.Address,
                 TotalOrders = user.Orders.Count(),
                 Roles = roles.ToList(), // Danh sách quyền
                 Reviews = user.Reviews.Select(r => new
@@ -92,12 +93,13 @@ namespace C5.Controllers
                 userId.Email = model.Email;
                 userId.UserName = model.Email;
                 userId.PhoneNumber = model.PhoneNumber;
+                userId.Address = model.Address;
 
                 var result = await _userManager.UpdateAsync(userId);
                 if (result.Succeeded)
                 {
                     TempData["Update"] = "Cập nhật user thành công";
-                    return RedirectToAction("Index");
+                    return RedirectToAction("ListUser");
                 }
                 foreach (var item in result.Errors)
                 {
@@ -112,7 +114,7 @@ namespace C5.Controllers
             if (userId == null)
             {
                 TempData["NotFound"] = "Không tìm thấy Id này";
-                return RedirectToAction("Index");
+                return RedirectToAction("ListUser");
             }
             else
             {
@@ -120,7 +122,7 @@ namespace C5.Controllers
                 if (result.Succeeded)
                 {
                     TempData["Delete"] = "Xóa user thành công";
-                    return RedirectToAction("Index");
+                    return RedirectToAction("ListUser");
                 }
                 else
                 {
@@ -128,7 +130,7 @@ namespace C5.Controllers
                     {
                         ModelState.AddModelError("", item.Description);
                     }
-                    return RedirectToAction("Index");
+                    return RedirectToAction("ListUser");
                 }
             }
         }

@@ -1,0 +1,32 @@
+﻿@model C5.Models.Order
+
+<h2>🎉 Đặt hàng thành công!</h2>
+<p>Mã đơn hàng: <b>@Model.Id</b></p>
+<p>Ngày đặt: <b>@Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</b></p>
+<p>Phương thức thanh toán: <b>@(Model.PaymentMethod == "Cash" ? "💵 Tiền mặt" : "🏦 Chuyển khoản")</b></p>
+
+<h3>Chi tiết đơn hàng</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Sản phẩm</th>
+            <th>Số lượng</th>
+            <th>Giá</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.OrderItems)
+        {
+            <tr>
+                <td>@item.Product.Name</td>
+                <td>@item.Quantity</td>
+                <td>@item.UnitPrice.ToString("N0") đ</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h4>Tổng tiền: <b>@Model.TotalAmount.ToString("N0") đ</b></h4>
+
+<a asp-action="Index" asp-controller="Home" class="btn btn-primary">🏠 Về trang chủ</a>

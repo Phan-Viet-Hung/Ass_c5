@@ -1,0 +1,29 @@
+﻿@model dynamic
+
+@{
+    ViewData["Title"] = "Chi tiết sản phẩm";
+}
+
+<div class="container mt-4">
+    <h2 class="text-center text-primary mb-4">Chi tiết sản phẩm</h2>
+
+    <div class="row">
+        <div class="col-md-5 text-center">
+            <img src="@Model.Image" class="img-fluid rounded shadow-sm" alt="@Model.Name" style="max-height: 300px; object-fit: cover;">
+        </div>
+
+        <div class="col-md-7">
+            <h4 class="text-success">@Model.Name</h4>
+            <p><strong>Danh mục:</strong> @Model.CategoryName</p>
+            <p><strong>Giá:</strong> <span class="text-danger fw-bold">@Model.Price.ToString("C")</span></p>
+            <p><strong>Mô tả:</strong> @Model.Description</p>
+            <p><strong>Tồn kho:</strong> @Model.StockQuantity sản phẩm</p>
+            <p><span class="badge bg-@(Model.IsActive ? "success" : "danger")">@Model.StatusText</span></p>
+
+            <div class="mt-4">
+                <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">⬅ Về trang chủ</a>
+                <a asp-controller="Cart" asp-action="AddToCart" asp-route-id="@Model.Id" class="btn btn-primary">🛒 Thêm vào giỏ hàng</a>
+            </div>
+        </div>
+    </div>
+</div>

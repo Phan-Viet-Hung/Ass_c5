@@ -28,8 +28,8 @@ namespace C5.Models
         }
 
         public OrderStatus Status { get; set; } = OrderStatus.Pending;
-
-
+        [Required]
+        public string PaymentMethod { get; set; }
         [Required]
         public DateTime OrderDate { get; set; } = DateTime.UtcNow;
 

@@ -22,6 +22,7 @@ namespace C5.Models
         [Required]
         [Range(0.01, double.MaxValue, ErrorMessage = "Đơn giá phải lớn hơn 0.")]
         public decimal UnitPrice { get; set; }
+        public string? CartItemId { get; set; }
 
         [ForeignKey(nameof(OrderId))]
         public virtual Order Order { get; set; }

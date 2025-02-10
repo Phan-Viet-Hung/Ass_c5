@@ -13,6 +13,7 @@
             <th>Họ và Tên</th>
             <th>Email</th>
             <th>Số điện thoại</th>
+            <th>Địa chỉ</th>
             <th>Ngày tạo</th>
             <th>Chức năng</th>
         </tr>
@@ -28,6 +29,7 @@
                     <td>@user.FullName</td>
                     <td>@user.Email</td>
                     <td>@user.PhoneNumber</td>
+                    <td>@user.Address</td>
                     <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
                     <td>
                         <a asp-route-id="@user.Id" asp-controller="User" asp-action="Details" class="btn btn-success">Chi tiết</a>

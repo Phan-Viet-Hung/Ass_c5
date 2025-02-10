@@ -1,0 +1,45 @@
+﻿@model C5.Models.ViewModels.CheckoutViewModel
+
+<h2>🛒 Xác nhận đơn hàng</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Sản phẩm</th>
+            <th>Số lượng</th>
+            <th>Đơn giá</th>
+            <th>Thành tiền</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.CartItems)
+        {
+            <tr>
+                <td>@item.ProductName</td>
+                <td>@item.Quantity</td>
+                <td>@item.UnitPrice.ToString("N0") đ</td>
+                <td>@(item.Quantity * item.UnitPrice) đ</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h4>Tổng tiền: <b>@Model.TotalAmount.ToString("N0") đ</b></h4>
+
+<hr>
+
+<h4>Chọn phương thức thanh toán:</h4>
+
+<form asp-action="PlaceOrder" asp-controller="Order" method="post">
+    <div class="form-check">
+        <input class="form-check-input" type="radio" name="PaymentMethod" value="Cash" checked>
+        <label class="form-check-label">💵 Thanh toán khi nhận hàng</label>
+    </div>
+
+    <div class="form-check">
+        <input class="form-check-input" type="radio" name="PaymentMethod" value="BankTransfer">
+        <label class="form-check-label">🏦 Chuyển khoản ngân hàng</label>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">📦 Xác nhận thanh toán</button>
+</form>

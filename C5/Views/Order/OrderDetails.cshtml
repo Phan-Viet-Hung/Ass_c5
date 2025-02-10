@@ -1,0 +1,63 @@
+﻿@model C5.Models.Order
+@using static C5.Models.Order
+@using static C5.Models.FastFoodUser
+<h2>Chi tiết đơn hàng</h2>
+
+<table class="table">
+    <tr>
+        <th>Mã đơn hàng:</th>
+        <td>@Model.Id</td>
+    </tr>
+    <tr>
+        <th>Ngày đặt:</th>
+        <td>@Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+    </tr>
+    <tr>
+        <th>Tổng tiền:</th>
+        <td>@Model.TotalAmount.ToString("N0") VNĐ</td>
+    </tr>
+    <tr>
+        <th>Trạng thái:</th>
+        <td>
+            @{
+                string statusText = Model.Status switch
+                {
+                    OrderStatus.Pending => "Chờ xác nhận",
+                    OrderStatus.Delivering => "Đang giao",
+                    OrderStatus.Completed => "Hoàn thành",
+                    OrderStatus.Canceled => "Đã hủy",
+                };
+            }
+            @statusText
+        </td>
+    </tr>
+    <tr>
+        <th>Địa chỉ:</th>
+        <td>@Model.User.Address</td>
+    </tr>
+</table>
+
+<h3>Sản phẩm trong đơn hàng</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Tên sản phẩm</th>
+            <th>Số lượng</th>
+            <th>Đơn giá</th>
+            <th>Thành tiền</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.OrderItems)
+        {
+            <tr>
+                <td>@item.Product.Name</td>
+                <td>@item.Quantity</td>
+                <td>@item.UnitPrice.ToString("N0") VNĐ</td>
+                <td>@(item.Quantity * item.UnitPrice) VNĐ</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a href="@Url.Action("History", "Order")" class="btn btn-secondary">Quay lại</a>

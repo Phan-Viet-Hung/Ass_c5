@@ -1,0 +1,50 @@
+﻿@model C5.Models.ViewModels.CreateUserViewModel
+
+@{
+    ViewData["Title"] = "Thông tin tài khoản";
+}
+
+<h2 class="text-center my-4">👤 Thông tin tài khoản</h2>
+
+<div class="container">
+    <div class="card shadow-lg p-4">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>📛 Họ và Tên:</strong> @Model.FullName</p>
+                <p><strong>📧 Email:</strong> @Model.Email</p>
+                <p><strong>📅 Ngày sinh:</strong> @Model.DateOfBirth.ToShortDateString()</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>📞 Số điện thoại:</strong> @Model.PhoneNumber</p>
+                <p><strong>📍 Địa chỉ:</strong> @(string.IsNullOrEmpty(Model.Address) ? "Chưa cập nhật" : Model.Address)</p>
+                <p>
+                    <strong>🔑 Mật khẩu:</strong> <span id="password-field">********</span>
+                    <button class="btn btn-sm btn-secondary" onclick="togglePassword()">👀</button>
+                </p>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <a asp-controller="Account" asp-action="EditUser" class="btn btn-primary">✏️ Chỉnh sửa</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 10px;
+        background: white;
+        max-width: 600px;
+        margin: auto;
+    }
+</style>
+
+<script>
+    function togglePassword() {
+        var passwordField = document.getElementById("password-field");
+        if (passwordField.innerText === "********") {
+            passwordField.innerText = "Ai cho mà nhìn"; // Không hiển thị mật khẩu thật
+        } else {
+            passwordField.innerText = "********";
+        }
+    }
+</script>

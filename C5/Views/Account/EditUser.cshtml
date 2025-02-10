@@ -1,0 +1,52 @@
+﻿@model C5.Models.ViewModels.EditUserViewModel
+
+@{
+    ViewData["Title"] = "Chỉnh sửa thông tin cá nhân";
+}
+
+<h2 class="text-center my-4">✏️ Chỉnh sửa thông tin</h2>
+
+
+<div class="container">
+    <div class="card shadow-lg p-4">
+        <form asp-action="EditUser" method="post">
+            <div class="mb-3">
+                <label class="form-label">📛 Họ và Tên</label>
+                <input asp-for="FullName" class="form-control" />
+                <span asp-validation-for="FullName" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">📅 Ngày sinh</label>
+                <input asp-for="DateOfBirth" type="date" class="form-control" />
+                <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">📞 Số điện thoại</label>
+                <input asp-for="PhoneNumber" class="form-control" />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">📍 Địa chỉ</label>
+                <input asp-for="Address" class="form-control" />
+                <span asp-validation-for="Address" class="text-danger"></span>
+            </div>
+
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-success">💾 Lưu thay đổi</button>
+                <a asp-action="DetailsUser" class="btn btn-secondary">🔙 Quay lại</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 10px;
+        background: white;
+        max-width: 600px;
+        margin: auto;
+    }
+</style>

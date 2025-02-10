@@ -1,8 +1,163 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model X.PagedList.IPagedList<C5.Models.Product>
+@using X.PagedList.Mvc.Core
+
+@{
+    ViewData["Title"] = "Trang chủ";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<h2 class="text-center my-4">🛍️ Danh sách sản phẩm</h2>
+
+<div class="container">
+    @if (Model != null && Model.Any())
+    {
+        <div class="row">
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                if (i % 3 == 0 && i != 0)
+                {
+                    @:</div><div class="row mt-4">
+                }
+
+                var product = Model[i];
+                <div class="col-md-4 mb-4">
+                    <div class="card product-card">
+                        <div class="position-relative">
+                            <img src="@product.Image" class="card-img-top product-image" alt="@product.Name">
+                            <span class="badge badge-status bg-@(product.IsActive ? "success" : "danger")">@product.StatusText</span>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-truncate">@product.Name</h5>
+                            <p class="card-text text-muted small">
+                                @(product.Description.Length > 50 ? product.Description.Substring(0, 50) + "..." : product.Description)
+                            </p>
+                            <p class="text-danger fw-bold mb-1">💲 @product.Price.ToString("C")</p>
+                            <div class="d-flex justify-content-between align-items-center mt-auto">
+                                <div class="d-flex align-items-center">
+                                    <span class="me-2 text-secondary">📦 Tồn kho:</span>
+                                    <strong class="text-dark me-3">@product.StockQuantity</strong>
+
+                                    <input type="number" id="quantity-@product.Id" class="form-control quantity-input" 
+                                           value="1" min="1" max="@product.StockQuantity">
+                                </div>
+
+                            </div>
+
+
+                            <div class="d-flex justify-content-between mt-auto">
+                                <a asp-controller="Home" asp-action="DetailsProduct" asp-route-id="@product.Id" class="btn btn-primary">Xem chi tiết</a>
+                                <a asp-controller="Cart" asp-action="AddToCart" asp-route-productId="@product.Id" class="btn btn-success">🛒 Thêm vào giỏ</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center text-muted my-5">
+            <h4>😥 Không có sản phẩm nào.</h4>
+        </div>
+    }
 </div>
+
+<!-- Phân trang -->
+<div class="pagination-container">
+    @Html.PagedListPager(Model, page => Url.Action("Index", new { page }),
+        new PagedListRenderOptions
+        {
+            Display = PagedListDisplayMode.IfNeeded,
+            MaximumPageNumbersToDisplay = 5,
+            LiElementClasses = new[] { "page-item" },
+            PageClasses = new[] { "page-link" }
+        })
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".add-to-cart-btn").forEach(button => {
+            button.addEventListener("click", function (event) {
+                event.preventDefault();
+                let productId = this.getAttribute("data-id");
+                let quantity = document.getElementById("quantity-" + productId).value;
+                window.location.href = `/Cart/AddToCart/${productId}?quantity=${quantity}`;
+            });
+        });
+    });
+</script>
+
+
+<style>
+    /* Card sản phẩm */
+    .product-card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: transform 0.2s ease-in-out;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Ảnh sản phẩm */
+    .product-image {
+        height: 200px;
+        object-fit: cover;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+
+    /* Badge trạng thái */
+    .badge-status {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 12px;
+        padding: 5px 10px;
+        border-radius: 20px;
+    }
+
+    /* Input số lượng */
+    .quantity-input {
+        width: 80px;
+        text-align: center;
+        margin-right: 10px;
+    }
+
+    /* Phân trang */
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 30px;
+    }
+
+    .page-item.active .page-link {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: white;
+    }
+
+    .page-item .page-link {
+        color: #007bff;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .page-item .page-link:hover {
+        background-color: #0056b3;
+        color: white;
+    }
+    <style>
+    .quantity-input {
+        width: 60px;
+        text-align: center;
+        margin-left: 5px;
+    }
+
+    .d-flex.align-items-center {
+        gap: 10px; /* Tạo khoảng cách giữa các phần tử */
+    }
+</style>
+
+</style>

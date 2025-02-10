@@ -1,4 +1,6 @@
-﻿@model List<C5.Models.Product>
+﻿@model X.PagedList.IPagedList<C5.Models.Product>
+@using X.PagedList.Mvc.Core
+
 @{
     ViewData["Title"] = "Quản lý sản phẩm";
 }
@@ -35,16 +37,27 @@
                     </span>
                 </td>
                 <td>
-                    <a asp-action="EditProduct" asp-route-id="@product.Id" class="btn btn-warning btn-sm">Sửa</a>
-                    <a asp-action="Delete" asp-route-id="@product.Id" class="btn btn-danger btn-sm"> 
-                        @(product.IsActive ? "Ẩn" : "Hiển thị" )
-                        
+                    <a asp-action="UpdateProduct" asp-route-id="@product.Id" class="btn btn-warning btn-sm">Sửa</a>
+                    <a asp-action="Delete" asp-route-id="@product.Id" class="btn btn-danger btn-sm">
+                        @(product.IsActive ? "Ẩn" : "Hiển thị")
                     </a>
                 </td>
             </tr>
         }
     </tbody>
 </table>
+
+<!-- Phân trang -->
+<div class="pagination-container">
+    @Html.PagedListPager(Model, page => Url.Action("ListProduct", new { page }),
+            new PagedListRenderOptions
+    {
+        Display = PagedListDisplayMode.IfNeeded,
+        MaximumPageNumbersToDisplay = 5,
+        LiElementClasses = new[] { "page-item" },
+        PageClasses = new[] { "page-link" }
+    })
+</div>
 
 <style>
     .product-img {
@@ -57,5 +70,21 @@
 
     .btn-sm {
         margin: 2px;
+    }
+
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .page-item.active .page-link {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: white;
+    }
+
+    .page-item .page-link {
+        color: #007bff;
     }
 </style>

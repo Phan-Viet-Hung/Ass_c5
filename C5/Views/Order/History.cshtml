@@ -1,0 +1,47 @@
+﻿@model List<C5.Models.Order>
+@using static C5.Models.Order
+<h2>Lịch sử mua hàng</h2>
+
+@if (!Model.Any())
+{
+    <p>Bạn chưa có đơn hàng nào.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Mã đơn hàng</th>
+                <th>Ngày đặt</th>
+                <th>Tổng tiền</th>
+                <th>Trạng thái</th>
+                <th>Chi tiết</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var order in Model)
+            {
+                <tr>
+                    <td>@order.Id</td>
+                    <td>@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@order.TotalAmount.ToString("N0") VNĐ</td>
+                    <td>
+                        @{
+                            string statusText = order.Status switch
+                            {
+                                OrderStatus.Pending => "Chờ xác nhận",
+                                OrderStatus.Delivering => "Đang giao",
+                                OrderStatus.Completed => "Hoàn thành",
+                                OrderStatus.Canceled => "Đã hủy"
+                            };
+                        }
+                        @statusText
+                    </td>
+                    <td>
+                        <a href="@Url.Action("OrderDetails", "Order", new { orderId = order.Id })" class="btn btn-primary">Xem</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

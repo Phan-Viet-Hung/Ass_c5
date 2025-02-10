@@ -46,7 +46,7 @@ namespace C5.Controllers
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
-                    await _userManager.AddToRoleAsync(user, "Admin");
+                    await _userManager.AddToRoleAsync(user, "Customer");
 
                     // 🔹 Tạo giỏ hàng mới với cùng Id của User
                     var cart = new Cart
@@ -130,5 +130,72 @@ namespace C5.Controllers
             await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home"); 
         }
+        public async Task<IActionResult> DetailsUser()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var model = new CreateUserViewModel
+            {
+                FullName = user.FullName,
+                Email = user.Email,
+                DateOfBirth = user.DateOfBirth,
+                PhoneNumber = user.PhoneNumber,
+                Address = user.Address,
+            };
+
+            return View(model);
+        }
+        [HttpGet]
+        public async Task<IActionResult> EditUser()
+        {
+            return View();
+        }
+        [HttpPost]
+        public async Task<IActionResult> EditUser(EditUserViewModel model)
+        {
+            //if (!ModelState.IsValid)
+            //{
+            //    return View(model);
+            //}
+
+            // Kiểm tra người dùng có đang đăng nhập không
+            if (!User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            // Cập nhật thông tin người dùng
+            user.FullName = model.FullName;
+            user.DateOfBirth = model.DateOfBirth;
+            user.PhoneNumber = model.PhoneNumber;
+            user.Address = model.Address;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (result.Succeeded)
+            {
+                TempData["Success"] = "Cập nhật thông tin thành công!";
+                return RedirectToAction("DetailsUser");
+            }
+
+            // Nếu cập nhật thất bại, hiển thị lỗi
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
+
+            return View(model);
+        }
+
+
     }
 }
