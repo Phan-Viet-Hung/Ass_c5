@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace C5.Migrations
 {
     [DbContext(typeof(FastFoodDbContext))]
-    [Migration("20250209175245_k")]
-    partial class k
+    [Migration("20250213210238_a")]
+    partial class a
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -74,6 +74,40 @@ namespace C5.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("C5.Models.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OrderId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("C5.Models.Order", b =>
                 {
                     b.Property<string>("Id")
@@ -81,6 +115,10 @@ namespace C5.Migrations
 
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -108,6 +146,9 @@ namespace C5.Migrations
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("CartItemId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OrderId")
                         .IsRequired()
@@ -251,6 +292,9 @@ namespace C5.Migrations
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
@@ -517,6 +561,24 @@ namespace C5.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("C5.Models.Notification", b =>
+                {
+                    b.HasOne("C5.Models.Order", "Order")
+                        .WithMany("Notifications")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("C5.Models.FastFoodUser", "User")
+                        .WithMany("Notifications")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("C5.Models.Order", b =>
                 {
                     b.HasOne("C5.Models.FastFoodUser", "User")
@@ -657,6 +719,8 @@ namespace C5.Migrations
 
             modelBuilder.Entity("C5.Models.Order", b =>
                 {
+                    b.Navigation("Notifications");
+
                     b.Navigation("OrderItems");
 
                     b.Navigation("Payment")
@@ -679,8 +743,9 @@ namespace C5.Migrations
 
             modelBuilder.Entity("C5.Models.FastFoodUser", b =>
                 {
-                    b.Navigation("Cart")
-                        .IsRequired();
+                    b.Navigation("Cart");
+
+                    b.Navigation("Notifications");
 
                     b.Navigation("Orders");
 

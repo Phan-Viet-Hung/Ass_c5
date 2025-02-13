@@ -1,4 +1,5 @@
 ﻿using C5.Data;
+using C5.Models;
 using C5.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -35,6 +36,39 @@ namespace C5.Controllers
             };
 
             return View(viewModel);
+        }
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public IActionResult CreateVoucher()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateVoucher(Voucher model)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["Error"] = "Lỗi dữ liệu không hợp lệ";
+                return View(model);
+            }
+
+            var existingVoucher = await _context.Vouchers
+                .FirstOrDefaultAsync(v => v.Code == model.Code);
+
+            if (existingVoucher != null)
+            {
+                ModelState.AddModelError("Code", "Mã giảm giá đã tồn tại.");
+                return View(model);
+            }
+
+            _context.Vouchers.Add(model);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Tạo voucher thành công!";
+            return RedirectToAction("ListVoucher");
         }
 
     }

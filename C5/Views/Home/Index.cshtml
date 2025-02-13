@@ -31,22 +31,21 @@
                                 @(product.Description.Length > 50 ? product.Description.Substring(0, 50) + "..." : product.Description)
                             </p>
                             <p class="text-danger fw-bold mb-1">💲 @product.Price.ToString("C")</p>
-                            <div class="d-flex justify-content-between align-items-center mt-auto">
+                            <form asp-controller="Cart" asp-action="AddToCart" method="post" class="add-to-cart-form">
+                                <input type="hidden" name="productId" value="@product.Id" />
                                 <div class="d-flex align-items-center">
-                                    <span class="me-2 text-secondary">📦 Tồn kho:</span>
+                                    <span class="me-2 text-secondary">📦 Còn lại:</span>
                                     <strong class="text-dark me-3">@product.StockQuantity</strong>
 
-                                    <input type="number" id="quantity-@product.Id" class="form-control quantity-input" 
+                                    <input type="number" name="quantity" id="quantity-@product.Id" class="form-control quantity-input"
                                            value="1" min="1" max="@product.StockQuantity">
                                 </div>
+                                <div class="d-flex justify-content-between mt-2">
+                                <a asp-controller="Home" asp-action="DetailsProduct" asp-route-id="@product.Id" class="btn btn-primary mt-2">Xem chi tiết</a>
+                                <button type="submit" class="btn btn-success mt-2">🛒 Thêm vào giỏ</button>
+                                </div>
+                            </form>
 
-                            </div>
-
-
-                            <div class="d-flex justify-content-between mt-auto">
-                                <a asp-controller="Home" asp-action="DetailsProduct" asp-route-id="@product.Id" class="btn btn-primary">Xem chi tiết</a>
-                                <a asp-controller="Cart" asp-action="AddToCart" asp-route-productId="@product.Id" class="btn btn-success">🛒 Thêm vào giỏ</a>
-                            </div>
                         </div>
                     </div>
                 </div>

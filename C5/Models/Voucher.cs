@@ -23,6 +23,9 @@ namespace C5.Models
         [Required(ErrorMessage = "Vui lòng nhập ngày kết thúc.")]
         [DataType(DataType.Date)]
         public DateTime EndDate { get; set; }
+        [Required]
+        [Range(0,1000,ErrorMessage = "Số lượng chỉ được từ 0 đến 1000")]
+        public int Quantity { get; set; }
 
         public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
     }

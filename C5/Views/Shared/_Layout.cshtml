@@ -83,6 +83,7 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
+                        
 
                         @if (User.IsInRole("Admin"))
                         {
@@ -111,6 +112,17 @@
                     </ul>
 
                     <ul class="navbar-nav ms-auto">
+                        <ul class="navbar-nav ms-auto">
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown">
+                                    🔔 <span id="notificationCount" class="badge bg-danger"></span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown" id="notificationList">
+                                    <li><span class="dropdown-item">Không có thông báo</span></li>
+                                </ul>
+                            </li>
+                        </ul>
+
                         @if (User.Identity.IsAuthenticated)
                         {
                             <li class="nav-item dropdown">
@@ -147,6 +159,7 @@
                                 </a>
                             </li>
                         }
+
                     </ul>
                 </div>
             </div>
@@ -191,3 +204,20 @@
     
 </body>
 </html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+<script src="~/lib/signalr/signalr.min.js"></script>
+<script>
+    var connection = new signalR.HubConnectionBuilder().withUrl("/notificationHub").build();
+
+    connection.on("ReceiveNotification", function (message) {
+        var notificationList = document.getElementById("notificationList");
+        notificationList.innerHTML = `<li><span class="dropdown-item">${message}</span></li>` + notificationList.innerHTML;
+
+        var notificationCount = document.getElementById("notificationCount");
+        notificationCount.textContent = parseInt(notificationCount.textContent || 0) + 1;
+    });
+
+    connection.start().catch(function (err) {
+        console.error(err.toString());
+    });
+</script>

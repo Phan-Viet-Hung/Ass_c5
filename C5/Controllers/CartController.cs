@@ -3,6 +3,7 @@ using C5.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace C5.Controllers
 {
@@ -13,71 +14,86 @@ namespace C5.Controllers
         {
             _context = context;
         }
+
+        // Hiển thị giỏ hàng
         public async Task<IActionResult> CartIndex()
         {
-            // Lấy UserId của người dùng hiện tại
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
             if (string.IsNullOrEmpty(userId))
             {
+                TempData["Error"] = "Bạn cần đăng nhập để xem giỏ hàng.";
                 return RedirectToAction("Login", "Account");
             }
 
-            // Tìm giỏ hàng của user
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
-                .ThenInclude(ci => ci.Product) // Nạp thêm thông tin sản phẩm
+                .ThenInclude(ci => ci.Product)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
             if (cart == null || !cart.CartItems.Any())
             {
-                TempData["Error"] = "Không có sản phẩm nào trong giỏ hàng.";
+                TempData["Error"] = "Giỏ hàng của bạn đang trống.";
                 return View(new List<CartItem>());
             }
 
             return View(cart.CartItems.ToList());
         }
-        public async Task<IActionResult> AddToCart(string productId, int quantity = 1)
-        {
-            if (string.IsNullOrEmpty(productId) || quantity <= 0)
-            {
-                return BadRequest("Sản phẩm không hợp lệ hoặc số lượng phải lớn hơn 0.");
-            }
 
-            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        // Thêm sản phẩm vào giỏ hàng
+        public async Task<IActionResult> AddToCart(string productId, int quantity)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
             {
+                TempData["Error"] = "Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng.";
                 return RedirectToAction("Login", "Account");
             }
 
-            // Lấy giỏ hàng của user, nếu chưa có thì tạo mới
+            if (string.IsNullOrEmpty(productId) || quantity <= 0)
+            {
+                TempData["Error"] = "Sản phẩm không hợp lệ hoặc số lượng phải lớn hơn 0.";
+                return RedirectToAction("CartIndex");
+            }
+
+            var product = await _context.Products.FindAsync(productId);
+            if (product == null || !product.IsActive)
+            {
+                TempData["Error"] = "Sản phẩm không tồn tại hoặc đã ngừng bán.";
+                return RedirectToAction("CartIndex");
+            }
+
+            if (quantity > product.StockQuantity)
+            {
+                TempData["Error"] = $"Chỉ còn {product.StockQuantity} sản phẩm trong kho.";
+                return RedirectToAction("CartIndex");
+            }
+
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
             if (cart == null)
             {
-                cart = new Cart
-                {
-                    UserId = userId
-                };
+                cart = new Cart { UserId = userId }; // CartId = UserId
                 _context.Carts.Add(cart);
                 await _context.SaveChangesAsync();
             }
 
-            // Kiểm tra sản phẩm đã có trong giỏ hàng chưa
             var cartItem = cart.CartItems.FirstOrDefault(ci => ci.ProductId == productId);
             if (cartItem != null)
             {
-                // Nếu có thì cập nhật số lượng
+                if (cartItem.Quantity + quantity > product.StockQuantity)
+                {
+                    TempData["Error"] = $"Bạn không thể thêm quá {product.StockQuantity} sản phẩm.";
+                    return RedirectToAction("CartIndex");
+                }
                 cartItem.Quantity += quantity;
             }
             else
             {
-                // Nếu chưa có thì thêm mới
                 cartItem = new CartItem
                 {
-                    CartId = cart.UserId,
+                    CartId = userId, // CartId = UserId
                     ProductId = productId,
                     Quantity = quantity
                 };
@@ -85,6 +101,7 @@ namespace C5.Controllers
             }
 
             await _context.SaveChangesAsync();
+            TempData["Success"] = "Sản phẩm đã được thêm vào giỏ hàng!";
             return RedirectToAction("CartIndex");
         }
     }

@@ -40,6 +40,8 @@ namespace C5.Models
         public virtual Voucher? Voucher { get; set; }
 
         public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+        public virtual ICollection<Notification> Notifications { get; set; }
+
         public virtual Payment Payment { get; set; }
     }
 }

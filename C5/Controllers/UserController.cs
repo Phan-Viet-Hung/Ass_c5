@@ -70,44 +70,53 @@ namespace C5.Controllers
             if (userId == null)
             {
                 TempData["NotFound"] = "Không tìm thấy Id này";
-                return View("Index");
+                return RedirectToAction("ListUser");
             }
+
             else
             {
                 return View(userId);
             }
         }
         [HttpPost]
-        public async Task<IActionResult> Edit(string id,EditUserViewModel model)
+        [HttpPost]
+        public async Task<IActionResult> Edit(string id, EditUserViewModel model)
         {
             var userId = await _userManager.FindByIdAsync(id);
             if (userId == null)
             {
                 TempData["NotFound"] = "Không tìm thấy Id này";
-                return View("Index");
+                return RedirectToAction("ListUser");
             }
-            if (ModelState.IsValid)
-            {
-                userId.FullName = model.FullName;
-                userId.CreatedAt = model.DateOfBirth;
-                userId.Email = model.Email;
-                userId.UserName = model.Email;
-                userId.PhoneNumber = model.PhoneNumber;
-                userId.Address = model.Address;
 
-                var result = await _userManager.UpdateAsync(userId);
-                if (result.Succeeded)
-                {
-                    TempData["Update"] = "Cập nhật user thành công";
-                    return RedirectToAction("ListUser");
-                }
-                foreach (var item in result.Errors)
-                {
-                    ModelState.AddModelError("", item.Description);
-                }
+            if (!ModelState.IsValid)
+            {
+                TempData["Error"] = "Thông tin không hợp lệ";
+                return View(model);
+            }
+
+            // Chỉ cập nhật khi ModelState hợp lệ
+            userId.FullName = model.FullName;
+            userId.CreatedAt = model.DateOfBirth;
+            userId.Email = model.Email;
+            userId.UserName = model.Email;
+            userId.PhoneNumber = model.PhoneNumber;
+            userId.Address = model.Address;
+
+            var result = await _userManager.UpdateAsync(userId);
+            if (result.Succeeded)
+            {
+                TempData["Update"] = "Cập nhật user thành công";
+                return RedirectToAction("ListUser");
+            }
+
+            foreach (var item in result.Errors)
+            {
+                ModelState.AddModelError("", item.Description);
             }
             return View(model);
         }
+
         public async Task<IActionResult> Delete(string id)
         {
             var userId = await _userManager.FindByIdAsync(id);
@@ -116,23 +125,19 @@ namespace C5.Controllers
                 TempData["NotFound"] = "Không tìm thấy Id này";
                 return RedirectToAction("ListUser");
             }
+
+            var result = await _userManager.DeleteAsync(userId);
+            if (result.Succeeded)
+            {
+                TempData["Delete"] = "Xóa user thành công";
+            }
             else
             {
-                var result = await _userManager.DeleteAsync(userId);
-                if (result.Succeeded)
-                {
-                    TempData["Delete"] = "Xóa user thành công";
-                    return RedirectToAction("ListUser");
-                }
-                else
-                {
-                    foreach (var item in result.Errors)
-                    {
-                        ModelState.AddModelError("", item.Description);
-                    }
-                    return RedirectToAction("ListUser");
-                }
+                TempData["DeleteError"] = string.Join("; ", result.Errors.Select(e => e.Description));
             }
+
+            return RedirectToAction("ListUser");
         }
+
     }
 }

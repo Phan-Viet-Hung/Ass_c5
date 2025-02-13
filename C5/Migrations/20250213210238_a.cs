@@ -5,7 +5,7 @@
 namespace C5.Migrations
 {
     /// <inheritdoc />
-    public partial class paymentmedthod2 : Migration
+    public partial class a : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

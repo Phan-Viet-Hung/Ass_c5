@@ -18,6 +18,8 @@ namespace C5.Data
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Voucher> Vouchers { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+
 
         //protected override void OnModelCreating(ModelBuilder builder)
         //{
@@ -62,12 +64,12 @@ namespace C5.Data
                 .HasForeignKey(p => p.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // 🔹 Quan hệ User - Order
+            // Thiết lập quan hệ giữa User và Order (1-N)
             modelBuilder.Entity<Order>()
                 .HasOne(o => o.User)
                 .WithMany(u => u.Orders)
                 .HasForeignKey(o => o.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Cascade); // Nếu xóa User, tất cả đơn hàng của User sẽ bị xóa
 
             // 🔹 Quan hệ Order - OrderItem
             modelBuilder.Entity<OrderItem>()
@@ -102,6 +104,19 @@ namespace C5.Data
                 .WithMany(p => p.Reviews)
                 .HasForeignKey(r => r.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
+            // Thiết lập quan hệ giữa User và Notification (1-N)
+            modelBuilder.Entity<Notification>()
+                .HasOne(n => n.User)
+                .WithMany(u => u.Notifications)
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Cascade); // Nếu xóa User, tất cả thông báo của User sẽ bị xóa
+
+            // Quan hệ giữa Order và Notification
+            modelBuilder.Entity<Notification>()
+                .HasOne(n => n.Order)
+                .WithMany(o => o.Notifications)
+                .HasForeignKey(n => n.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);  // Ngăn xóa Order nếu có Notification liên kết
         }
 
     }

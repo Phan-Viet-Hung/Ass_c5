@@ -1,5 +1,6 @@
 ﻿using C5.Data;
 using C5.Models;
+using C5.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
@@ -35,17 +36,18 @@ namespace C5.Controllers
         public async Task<IActionResult> DetailsProduct(string id)
         {
             var product = await _context.Products
+                .Include(p => p.Category) // Tải luôn danh mục để tránh truy vấn lồng nhau
                 .Where(p => p.Id == id)
-                .Select(p => new
+                .Select(p => new ProductDetailsViewModel
                 {
-                    p.Id,
-                    p.Name,
-                    CategoryName = _context.Categories.Where(c => c.Id == p.CategoryId).Select(c => c.Name).FirstOrDefault(),
-                    p.Price,
-                    p.Image,
-                    p.Description,
-                    p.StockQuantity,
-                    p.IsActive,
+                    Id = p.Id,
+                    Name = p.Name,
+                    CategoryName = p.Category.Name, // Không cần truy vấn lồng nhau
+                    Price = p.Price,
+                    Image = p.Image,
+                    Description = p.Description,
+                    StockQuantity = p.StockQuantity,
+                    IsActive = p.IsActive,
                     StatusText = p.IsActive ? "Hoạt động" : "Ngừng bán"
                 })
                 .FirstOrDefaultAsync();
@@ -59,6 +61,7 @@ namespace C5.Controllers
             return View(product);
         }
 
+
         public IActionResult Privacy()
         {
             return View();
@@ -67,7 +70,15 @@ namespace C5.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            var requestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+            if (string.IsNullOrEmpty(requestId))
+            {
+                TempData["Error"] = "Đã xảy ra lỗi không xác định!";
+                return RedirectToAction("Index");
+            }
+
+            return View(new ErrorViewModel { RequestId = requestId });
         }
+
     }
 }

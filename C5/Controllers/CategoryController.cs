@@ -1,6 +1,8 @@
 ﻿using C5.Data;
 using C5.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace C5.Controllers
 {
@@ -11,66 +13,95 @@ namespace C5.Controllers
         {
             _context = context;
         }
+
+        // Danh sách danh mục
         [HttpGet]
-        public IActionResult ListCategory()
+        public async Task<IActionResult> ListCategory()
         {
-            var categories = _context.Categories.ToList();
+            var categories = await _context.Categories.ToListAsync();
             return View(categories);
         }
 
+        // Trang thêm danh mục
         [HttpGet]
         public IActionResult AddCategory()
         {
             return View();
         }
 
+        // Xử lý thêm danh mục
         [HttpPost]
-        public IActionResult AddCategory(Category ct)
+        public async Task<IActionResult> AddCategory([Bind("Id, Name")] Category ct)
         {
+            if (!ModelState.IsValid)
+            {
+                return View(ct);
+            }
+
             _context.Categories.Add(ct);
-            _context.SaveChanges();
-            return RedirectToAction("ListCategory", "Category"); //  Đảm bảo về đúng Controller
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Danh mục đã được thêm thành công!";
+            return RedirectToAction(nameof(ListCategory));
         }
 
+        // Trang chỉnh sửa danh mục
         [HttpGet]
-        public IActionResult EditCategory(string id)
+        public async Task<IActionResult> EditCategory(string id)
         {
-            var category = _context.Categories.FirstOrDefault(c => c.Id == id);
+            if (id == null)
+            {
+                return RedirectToAction(nameof(ListCategory));
+            }
+
+            var category = await _context.Categories.FindAsync(id);
             if (category == null)
             {
-                TempData["NotFound"] = "Không tìm thấy danh mục này";
-                return RedirectToAction("ListCategory");
+                TempData["Error"] = "Không tìm thấy danh mục này.";
+                return RedirectToAction(nameof(ListCategory));
             }
+
             return View(category);
         }
 
+        // Xử lý cập nhật danh mục
         [HttpPost]
-        public IActionResult EditCategory(Category ct)
+        public async Task<IActionResult> EditCategory(Category ct)
         {
-            var category = _context.Categories.FirstOrDefault(c => c.Id == ct.Id);
-            if (category == null)
+            if (!ModelState.IsValid)
             {
-                TempData["NotFound"] = "Không tìm thấy danh mục này";
-                return RedirectToAction("ListCategory");
+                return View(ct);
             }
 
-            category.Name = ct.Name; // Chỉ cập nhật trường cần thiết
-            _context.SaveChanges();
-            return RedirectToAction("ListCategory");
-        }
-
-        public IActionResult DeleteCategory(string id)
-        {
-            var category = _context.Categories.FirstOrDefault(c => c.Id == id);
+            var category = await _context.Categories.FindAsync(ct.Id);
             if (category == null)
             {
-                TempData["NotFound"] = "Không tìm thấy danh mục này";
-                return RedirectToAction("ListCategory");
+                TempData["Error"] = "Không tìm thấy danh mục này.";
+                return RedirectToAction(nameof(ListCategory));
+            }
+
+            category.Name = ct.Name;
+            _context.Categories.Update(category);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Danh mục đã được cập nhật!";
+            return RedirectToAction(nameof(ListCategory));
+        }
+
+        // Xóa danh mục
+        [HttpPost]
+        public async Task<IActionResult> DeleteCategory(string id)
+        {
+            var category = await _context.Categories.FindAsync(id);
+            if (category == null)
+            {
+                TempData["Error"] = "Không tìm thấy danh mục.";
+                return RedirectToAction(nameof(ListCategory));
             }
 
             _context.Categories.Remove(category);
-            _context.SaveChanges();
-            return RedirectToAction("ListCategory");
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Danh mục đã bị xóa.";
+            return RedirectToAction(nameof(ListCategory));
         }
     }
 }

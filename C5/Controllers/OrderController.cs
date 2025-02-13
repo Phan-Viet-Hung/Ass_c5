@@ -10,6 +10,7 @@ using X.PagedList;
 using X.PagedList.Mvc.Core;
 using static C5.Models.Order;
 using X.PagedList.Extensions;
+using Microsoft.AspNetCore.SignalR;
 
 namespace C5.Controllers
 {
@@ -17,9 +18,10 @@ namespace C5.Controllers
     {
         private readonly FastFoodDbContext _context;
         private readonly UserManager<FastFoodUser> _userManager;
-
-        public OrderController(FastFoodDbContext context, UserManager<FastFoodUser> userManager)
+        private readonly IHubContext<NotificationHub> _hubContext;
+        public OrderController(FastFoodDbContext context, UserManager<FastFoodUser> userManager,IHubContext<NotificationHub> hubContext)
         {
+            _hubContext = hubContext;
             _context = context;
             _userManager = userManager;
         }
@@ -43,32 +45,51 @@ namespace C5.Controllers
         {
             var order = await _context.Orders
                 .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.Product) // Load thông tin sản phẩm nếu cần
+                .ThenInclude(oi => oi.Product)
                 .FirstOrDefaultAsync(o => o.Id == orderId);
 
             if (order == null)
             {
                 return NotFound();
             }
-
-            if (order.Status == OrderStatus.Pending)
+            if (order.Status != OrderStatus.Pending)
             {
-                // Chuyển trạng thái thành "Đang giao"
-                order.Status = OrderStatus.Delivering;
-                _context.Orders.Update(order);
-
-                // Xóa sản phẩm trong giỏ hàng của user này
-                var cartItems = await _context.CartItems
-                    .Where(c => c.Cart.UserId == order.UserId)
-                    .ToListAsync();
-
-                _context.CartItems.RemoveRange(cartItems);
-
-                await _context.SaveChangesAsync();
+                TempData["Error"] = "Đơn hàng không hợp lệ hoặc đã được xử lý!";
+                return RedirectToAction(nameof(ListOrder));
             }
+
+            order.Status = OrderStatus.Delivering;
+            _context.Orders.Update(order);
+
+            var cartItems = await _context.CartItems.Where(c => c.Cart.UserId == order.UserId).ToListAsync();
+            foreach (var item in cartItems)
+            {
+                var product = item.Product;
+                if (product.StockQuantity < item.Quantity)
+                {
+                    TempData["Error"] = $"Sản phẩm {product.Name} không đủ số lượng tồn kho.";
+                    return RedirectToAction(nameof(ListOrder));
+                }
+                product.StockQuantity -= item.Quantity;
+            }
+
+            _context.CartItems.RemoveRange(cartItems);
+
+            var notification = new Notification
+            {
+                UserId = order.UserId,
+                Message = "Đơn hàng của bạn đã được xác nhận và đang giao hàng."
+            };
+
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
+
+            var hubContext = HttpContext.RequestServices.GetRequiredService<IHubContext<NotificationHub>>();
+            await hubContext.Clients.User(order.UserId).SendAsync("ReceiveNotification", notification.Message);
 
             return RedirectToAction(nameof(ListOrder));
         }
+
 
 
         public async Task<IActionResult> Checkout()
@@ -94,6 +115,7 @@ namespace C5.Controllers
         [HttpPost]
         public async Task<IActionResult> PlaceOrder(string PaymentMethod)
         {
+
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
@@ -156,12 +178,13 @@ namespace C5.Controllers
 
             if (order == null)
             {
-                return NotFound();
+                TempData["Error"] = "Không tìm thấy đơn hàng!";
+                return RedirectToAction("History");
             }
+
 
             return View(order);
         }
-        [Authorize] // Yêu cầu đăng nhập
         public async Task<IActionResult> History()
         {
             var user = await _userManager.GetUserAsync(User);
