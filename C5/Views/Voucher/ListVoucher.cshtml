@@ -1,43 +1,65 @@
 ﻿@model C5.Models.ViewModels.VoucherListViewModel
 
-<h2>Danh sách Voucher</h2>
-<a asp-action="CreateVoucher" asp-controller="Voucher" class="btn btn-primary">Tạo voucher</a>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Mã Voucher</th>
-            <th>Giảm giá (%)</th>
-            <th>Ngày hết hạn</th>
-            <th>Số lượng</th>
-            <th>Hành động</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var voucher in Model.Vouchers)
-        {
+@{
+    ViewData["Title"] = "Danh sách Voucher";
+}
+
+<h2 class="text-center text-primary mb-4">Danh sách Voucher</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card shadow-lg p-4">
+    <table class="table table-hover align-middle">
+        <thead class="table-primary">
             <tr>
-                <td>@voucher.Code</td>
-                <td>@voucher.DiscountPercent%</td>
-                <td>@voucher.EndDate.ToString("dd/MM/yyyy")</td>
-                <td>@voucher.Quantity</td>
-                <td>
-                    <a href="@Url.Action("EditVoucher", "Admin", new { id = voucher.Id })" class="btn btn-warning btn-sm">Sửa</a>
-                    <a href="@Url.Action("DeleteVoucher", "Admin", new { id = voucher.Id })" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa voucher này?');">Xóa</a>
-                </td>
+                <th>Mã Voucher</th>
+                <th>Giảm giá (%)</th>
+                <th>Số lượng</th>
+                <th>Ngày bắt đầu</th>
+                <th>Ngày hết hạn</th>
+                <th>Hành động</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var voucher in Model.Vouchers)
+            {
+                <tr>
+                    <td><span class="badge bg-dark">@voucher.Code</span></td>
+                    <td>@voucher.DiscountPercent%</td>
+                    <td>@voucher.Quantity</td>
+                    <td>@voucher.StartDate.ToString("dd/MM/yyyy")</td>
+                    <td>@voucher.EndDate.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        <a class="btn btn-sm btn-warning" href="@Url.Action("EditVoucher", new { id = voucher.Id })">✏️</a>
+                        <form asp-action="DeleteVoucher" method="post" onsubmit="return confirm('Bạn có chắc muốn xóa voucher này?')" style="display:inline;">
+                            <input type="hidden" name="id" value="@voucher.Id" />
+                            <button type="submit" class="btn btn-sm btn-danger">🗑</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
 
-<!-- Phân trang -->
-<nav>
-    <ul class="pagination">
-        @for (int i = 1; i <= Model.TotalPages; i++)
+    <div class="text-center mt-3">
+        @if (Model.CurrentPage > 1)
         {
-            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
-                <a class="page-link" href="@Url.Action("ListVoucher", new { page = i })">@i</a>
-            </li>
+            <a class="btn btn-primary" href="@Url.Action("ListVoucher", new { page = Model.CurrentPage - 1 })">◀ Trước</a>
         }
-    </ul>
-</nav>
 
+        <span class="mx-3">Trang @Model.CurrentPage / @Model.TotalPages</span>
+
+        @if (Model.CurrentPage < Model.TotalPages)
+        {
+            <a class="btn btn-primary" href="@Url.Action("ListVoucher", new { page = Model.CurrentPage + 1 })">Tiếp ▶</a>
+        }
+    </div>
+</div>
+
+<a class="btn btn-success mt-4" href="@Url.Action("CreateVoucher")">➕ Thêm Voucher</a>

@@ -1,0 +1,68 @@
+﻿@model C5.Models.Combo
+
+
+<h1 class="text-center text-primary">Tạo combo</h1>
+<hr />
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <form asp-action="CreateCombo" enctype="multipart/form-data" class="shadow-lg p-4 rounded bg-light">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <!-- Name -->
+                <div class="form-group mb-3">
+                    <label asp-for="Name" class="form-label text-dark">Tên combo</label>
+                    <input asp-for="Name" class="form-control border-0 shadow-sm" placeholder="Enter combo name" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <!-- Description -->
+                <div class="form-group mb-3">
+                    <label asp-for="Description" class="form-label text-dark">Mô tả</label>
+                    <textarea asp-for="Description" class="form-control border-0 shadow-sm" placeholder="Enter description" rows="4"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <!-- Price -->
+                <div class="form-group mb-3">
+                    <label asp-for="Price" class="form-label text-dark">Giá (VND)</label>
+                    <input asp-for="Price" class="form-control border-0 shadow-sm" placeholder="Enter price" />
+                    <span asp-validation-for="Price" class="text-danger"></span>
+                </div>
+
+                <!-- Stock -->
+                <div class="form-group mb-3">
+                    <label asp-for="StockQuantity" class="form-label text-dark">Số lượng</label>
+                    <input asp-for="StockQuantity" class="form-control border-0 shadow-sm" placeholder="Enter price" />
+                    <span asp-validation-for="StockQuantity" class="text-danger"></span>
+                </div>
+
+                <!-- Image Upload -->
+                <div class="form-group mb-4">
+                    <label for="Image" class="form-label text-dark">Ảnh combo</label>
+                    <div class="custom-file">
+                        <input type="file" id="ImageFile" name="ImageFile" asp-for="Image" class="form-control-file" />
+                        <label for="Image" class="custom-file-label">Choose file</label>
+                    </div>
+                    <span asp-validation-for="Image" class="text-danger"></span>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-group">
+                    <button type="submit" class="btn btn-success btn-lg btn-block shadow-lg">Tạo Combo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="text-center mt-3">
+        <a asp-action="ListCombo" class="btn btn-outline-primary btn-sm">Về danh sách</a>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

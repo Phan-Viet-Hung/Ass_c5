@@ -1,0 +1,20 @@
+﻿@model List<Notification>
+
+<h2>Thông Báo</h2>
+@if (Model.Any())
+{
+    <ul class="list-group">
+        @foreach (var notification in Model)
+        {
+            <li class="list-group-item">
+                <a href="/Order/OrderDetails/@notification.OrderId">
+                    @notification.Message - @notification.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                </a>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p class="text-muted">Chưa có thông báo nào.</p>
+}

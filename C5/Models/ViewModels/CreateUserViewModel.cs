@@ -19,7 +19,7 @@ namespace C5.Models.ViewModels
         [StringLength(100, MinimumLength = 8)]
         [DataType(DataType.Password)]
         public string Password { get; set; }
-        public string Address { get; set; }
+        public string? Address { get; set; }
 
         [DataType(DataType.Password)]
         [Compare("Password", ErrorMessage = "Mật khẩu không khớp")]

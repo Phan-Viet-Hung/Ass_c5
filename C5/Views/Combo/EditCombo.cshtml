@@ -1,0 +1,108 @@
+﻿@model C5.Models.Combo
+
+
+<h1 class="text-center text-primary mb-4">Sửa Combo</h1>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <form asp-action="EditCombo" enctype="multipart/form-data" class="bg-white p-5 rounded-lg shadow-lg border-0">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-4"></div>
+
+                <!-- Name -->
+                <div class="form-group mb-4">
+                    <label asp-for="Name" class="form-label font-weight-bold text-dark">Tên combo</label>
+                    <input asp-for="Name" class="form-control form-control-lg border-0 shadow-sm" placeholder="Nhập tên combo" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <!-- Description -->
+                <div class="form-group mb-4">
+                    <label asp-for="Description" class="form-label font-weight-bold text-dark">Description</label>
+                    <textarea asp-for="Description" class="form-control form-control-lg border-0 shadow-sm" placeholder="Enter description" rows="4"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <!-- Price -->
+                <div class="form-group mb-4">
+                    <label asp-for="Price" class="form-label font-weight-bold text-dark">Giá</label>
+                    <input asp-for="Price" class="form-control form-control-lg border-0 shadow-sm" placeholder="Nhập giá" />
+                    <span asp-validation-for="Price" class="text-danger"></span>
+                </div>
+
+                <!-- Price -->
+                <div class="form-group mb-4">
+                    <label asp-for="StockQuantity" class="form-label font-weight-bold text-dark">Số lượng</label>
+                    <input asp-for="StockQuantity" class="form-control form-control-lg border-0 shadow-sm" placeholder="Nhập số lượng" />
+                    <span asp-validation-for="StockQuantity" class="text-danger"></span>
+                </div>
+
+                <!-- Image Upload -->
+                <div class="form-group mb-4">
+                    <label for="ImageFile" class="form-label font-weight-bold text-dark">Ảnh combo</label>
+                    <div class="custom-file">
+                        <input type="file" id="ImageFile" name="ImageFile" class="form-control-file border-0 shadow-sm" />
+                        <label for="ImageFile" class="custom-file-label">Choose a file</label>
+                    </div>
+                    <span asp-validation-for="Image" class="text-danger"></span>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-group text-center">
+                    <button type="submit" class="btn btn-gradient-primary btn-lg w-100 py-3">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <a asp-action="ListCombo" class="btn btn-outline-secondary btn-sm">Về danh sách</a>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+
+<style>
+    /* Styling for form inputs */
+    .form-control-lg {
+        padding: 1rem;
+        font-size: 1.2rem;
+        border-radius: 8px;
+    }
+
+    /* Add a beautiful gradient to the submit button */
+    .btn-gradient-primary {
+        background: linear-gradient(to right, #4e73df, #1cc88a);
+        color: white;
+        border: none;
+        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+        /* Hover effect on submit button */
+        .btn-gradient-primary:hover {
+            background: linear-gradient(to right, #3578e5, #17a673);
+            box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+    /* Custom file upload label styling */
+    .custom-file-label {
+        font-size: 1rem;
+        background-color: #f0f2f5;
+        color: #495057;
+        padding: 12px 15px;
+        border-radius: 8px;
+    }
+
+    .custom-file-input:lang(en) ~ .custom-file-label::after {
+        content: "Browse...";
+    }
+
+    /* Add some margin to bottom of input fields */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+</style>

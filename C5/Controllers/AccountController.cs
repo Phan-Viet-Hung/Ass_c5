@@ -1,11 +1,15 @@
 ﻿using C5.Data;
 using C5.Models;
 using C5.Models.ViewModels;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Google.Apis.Auth;
 
 namespace C5.Controllers
 {
@@ -133,6 +137,67 @@ namespace C5.Controllers
             }
 
             return RedirectToAction("Login");
+        }
+        [HttpPost]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
+        {
+            try
+            {
+                // Xác thực token Google
+                var payload = await GoogleJsonWebSignature.ValidateAsync(request.Token);
+                if (payload == null)
+                {
+                    return Json(new { success = false, message = "Token không hợp lệ!" });
+                }
+
+                // Kiểm tra xem user đã tồn tại chưa
+                var user = await _userManager.FindByEmailAsync(payload.Email);
+                if (user == null)
+                {
+                    // Nếu chưa tồn tại, tạo user mới
+                    user = new FastFoodUser
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        FullName = payload.Name,
+                        UserName = payload.Email,
+                        Email = payload.Email,
+                        EmailConfirmed = true
+                    };
+
+                    var result = await _userManager.CreateAsync(user);
+                    if (!result.Succeeded)
+                    {
+                        return Json(new { success = false, message = "Lỗi khi tạo tài khoản!" });
+                    }
+
+                    // Thêm user vào vai trò Customer
+                    await _userManager.AddToRoleAsync(user, "Customer");
+
+                    // Tạo giỏ hàng cho user
+                    var cart = new Cart { UserId = user.Id };
+                    _context.Carts.Add(cart);
+                    await _context.SaveChangesAsync();
+                }
+
+                // Tạo danh sách claims cho user
+                var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id),
+            new Claim(ClaimTypes.Name, user.FullName),
+            new Claim(ClaimTypes.Email, user.Email)
+        };
+
+                // Đăng nhập user vào hệ thống
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi khi đăng nhập Google: " + ex.Message });
+            }
         }
 
         // Đăng xuất tài khoản

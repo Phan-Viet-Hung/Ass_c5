@@ -25,6 +25,9 @@ namespace C5.Models
 
         [StringLength(1000, ErrorMessage = "Mô tả không được vượt quá 1000 ký tự.")]
         public string Description { get; set; }
+        // Thêm thuộc tính IsCombo để phân biệt combo
+        [Required]
+        public bool IsCombo { get; set; } = false;
 
         [Required]
         [Range(0, int.MaxValue, ErrorMessage = "Số lượng tồn kho không được âm.")]
@@ -48,6 +51,6 @@ namespace C5.Models
 
         public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
         public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
-        public virtual ICollection<Review> Reviews { get; set; }
+        public virtual ICollection<Review>? Reviews { get; set; }
     }
 }

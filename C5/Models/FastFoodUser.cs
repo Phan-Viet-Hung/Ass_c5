@@ -20,12 +20,12 @@ namespace C5.Models
         [DisplayFormat(ApplyFormatInEditMode = true, DataFormatString = "{0:dd/MM/yyyy HH:mm}")]
         public DateTime CreatedAt { get; set; } = GetVietnamTime();
 
-        public string Address { get; set; }
+        public string? Address { get; set; }
 
         public virtual Cart? Cart { get; set; }
         public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
         public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
-        public virtual ICollection<Notification> Notifications { get; set; }
+        public virtual ICollection<Notification>? Notifications { get; set; }
 
 
         // Lấy ngày giờ Việt Nam (GMT+7)

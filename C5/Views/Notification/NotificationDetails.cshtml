@@ -1,0 +1,7 @@
+﻿@model Notification
+
+<h2>Chi Tiết Thông Báo</h2>
+<p><strong>Nội dung:</strong> @Model.Message</p>
+<p><strong>Ngày nhận:</strong> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+
+<a href="/Order/Details/@Model.Id" class="btn btn-primary">Xem đơn hàng</a>

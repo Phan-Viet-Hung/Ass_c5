@@ -41,6 +41,9 @@ namespace C5.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("ComboId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("ProductId")
                         .HasColumnType("nvarchar(450)");
 
@@ -50,6 +53,8 @@ namespace C5.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CartId");
+
+                    b.HasIndex("ComboId");
 
                     b.HasIndex("ProductId");
 
@@ -69,6 +74,39 @@ namespace C5.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("C5.Models.Combo", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Image")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("StockQuantity")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Combos");
                 });
 
             modelBuilder.Entity("C5.Models.Notification", b =>
@@ -110,6 +148,15 @@ namespace C5.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<decimal?>("DiscountAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("DiscountPercent")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("FinalAmount")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
 
@@ -126,6 +173,9 @@ namespace C5.Migrations
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("VoucherCode")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("VoucherId")
                         .HasColumnType("uniqueidentifier");
@@ -147,12 +197,14 @@ namespace C5.Migrations
                     b.Property<string>("CartItemId")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ComboId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("OrderId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ProductId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("Quantity")
@@ -162,6 +214,8 @@ namespace C5.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ComboId");
 
                     b.HasIndex("OrderId");
 
@@ -220,6 +274,9 @@ namespace C5.Migrations
                         .HasColumnType("nvarchar(255)");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsCombo")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
@@ -299,6 +356,31 @@ namespace C5.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Vouchers");
+                });
+
+            modelBuilder.Entity("ComboItem", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ComboId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ProductId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComboId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ComboItems");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -513,7 +595,6 @@ namespace C5.Migrations
                     b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUser");
 
                     b.Property<string>("Address")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -549,11 +630,17 @@ namespace C5.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("C5.Models.Combo", "Combo")
+                        .WithMany()
+                        .HasForeignKey("ComboId");
+
                     b.HasOne("C5.Models.Product", "Product")
                         .WithMany("CartItems")
                         .HasForeignKey("ProductId");
 
                     b.Navigation("Cart");
+
+                    b.Navigation("Combo");
 
                     b.Navigation("Product");
                 });
@@ -596,6 +683,10 @@ namespace C5.Migrations
 
             modelBuilder.Entity("C5.Models.OrderItem", b =>
                 {
+                    b.HasOne("C5.Models.Combo", "Combo")
+                        .WithMany()
+                        .HasForeignKey("ComboId");
+
                     b.HasOne("C5.Models.Order", "Order")
                         .WithMany("OrderItems")
                         .HasForeignKey("OrderId")
@@ -604,9 +695,9 @@ namespace C5.Migrations
 
                     b.HasOne("C5.Models.Product", "Product")
                         .WithMany("OrderItems")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ProductId");
+
+                    b.Navigation("Combo");
 
                     b.Navigation("Order");
 
@@ -651,6 +742,25 @@ namespace C5.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ComboItem", b =>
+                {
+                    b.HasOne("C5.Models.Combo", "Combo")
+                        .WithMany("ComboItems")
+                        .HasForeignKey("ComboId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("C5.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Combo");
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -712,6 +822,11 @@ namespace C5.Migrations
             modelBuilder.Entity("C5.Models.Category", b =>
                 {
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("C5.Models.Combo", b =>
+                {
+                    b.Navigation("ComboItems");
                 });
 
             modelBuilder.Entity("C5.Models.Order", b =>

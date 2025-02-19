@@ -54,13 +54,9 @@ namespace C5.Controllers
         {
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    TempData["Error"] = "Dữ liệu không hợp lệ.";
-                    ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name");
-                    return View(product);
-                }
 
+
+                ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name");
                 // Xử lý upload ảnh
                 if (imageFile != null && imageFile.Length > 0)
                 {
@@ -75,7 +71,7 @@ namespace C5.Controllers
 
                 // Thiết lập thời gian Việt Nam
                 product.CreatedAt = GetVietnamTime();
-
+                
                 _context.Products.Add(product);
                 await _context.SaveChangesAsync();
 
@@ -109,16 +105,12 @@ namespace C5.Controllers
             var product = await _context.Products.FindAsync(id);
             if (product == null) return NotFound();
 
-            if (!ModelState.IsValid)
-            {
-                TempData["Error"] = "Dữ liệu không hợp lệ.";
-                return View(updatedProduct);
-            }
 
             product.Name = updatedProduct.Name;
             product.Price = updatedProduct.Price;
             product.Description = updatedProduct.Description;
             product.CategoryId = updatedProduct.CategoryId;
+            product.StockQuantity = updatedProduct.StockQuantity;
 
             // Chỉ cập nhật ảnh nếu có file mới
             if (imageFile != null && imageFile.Length > 0)

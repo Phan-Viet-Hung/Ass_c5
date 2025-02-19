@@ -12,8 +12,7 @@ namespace C5.Models
         [Required]
         public string OrderId { get; set; }
 
-        [Required]
-        public string ProductId { get; set; }
+        public string? ProductId { get; set; }
 
         [Required]
         [Range(1, int.MaxValue, ErrorMessage = "Số lượng phải lớn hơn 0.")]
@@ -29,5 +28,7 @@ namespace C5.Models
 
         [ForeignKey(nameof(ProductId))]
         public virtual Product Product { get; set; }
+        public Combo? Combo { get; set; }
+        public string? ComboId { get; internal set; }
     }
 }

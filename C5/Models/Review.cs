@@ -26,9 +26,9 @@ namespace C5.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [ForeignKey(nameof(UserId))]
-        public virtual FastFoodUser User { get; set; }
+        public virtual FastFoodUser? User { get; set; }
 
         [ForeignKey(nameof(ProductId))]
-        public virtual Product Product { get; set; }
+        public virtual Product? Product { get; set; }
     }
 }

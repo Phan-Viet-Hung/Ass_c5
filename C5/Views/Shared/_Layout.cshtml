@@ -85,40 +85,17 @@
                         </li>
                         
 
-                        @if (User.IsInRole("Admin"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Product" asp-action="ListProduct">Quản lý sản phẩm</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Order" asp-action="ListOrder">Quản lý đơn hàng</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="User" asp-action="ListUser">Quản lý người dùng</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Voucher" asp-action="ListVoucher">Quản lý Voucher</a>
-                            </li>
-                        }
-                        else if (User.IsInRole("Customer"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Cart" asp-action="CartIndex">Giỏ hàng</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Order" asp-action="History">Lịch sử mua hàng</a>
-                            </li>
-                        }
+                        
                     </ul>
 
                     <ul class="navbar-nav ms-auto">
                         <ul class="navbar-nav ms-auto">
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown">
-                                    🔔 <span id="notificationCount" class="badge bg-danger"></span>
+                                    🔔 <span id="notificationCount" class="badge bg-danger">0</span>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown" id="notificationList">
-                                    <li><span class="dropdown-item">Không có thông báo</span></li>
+                                    <li id="noNotification"><span class="dropdown-item text-muted">Không có thông báo fen ơi</span></li>
                                 </ul>
                             </li>
                         </ul>
@@ -136,6 +113,53 @@
                                             <i class="bi bi-person-lines-fill me-2"></i> Hồ sơ tài khoản
                                         </a>
                                     </li>
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Product" asp-action="ListProduct">
+                                                <i class="bi bi-box-seam me-2"></i> Quản lý sản phẩm
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Order" asp-action="ListOrder">
+                                                <i class="bi bi-receipt-cutoff me-2"></i> Quản lý đơn hàng
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="User" asp-action="ListUser">
+                                                <i class="bi bi-people me-2"></i> Quản lý người dùng
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Voucher" asp-action="ListVoucher">
+                                                <i class="bi bi-ticket-perforated me-2"></i> Quản lý Voucher
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Category" asp-action="ListCategory">
+                                                <i class="bi bi-tags me-2"></i> Quản lý Danh mục
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Combo" asp-action="ListCombo">
+                                                <i class="bi bi-basket2 me-2"></i> Quản lý Combo
+                                            </a>
+                                        </li>
+                                    }
+                                    else if (User.IsInRole("Customer"))
+                                    {
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Cart" asp-action="CartIndex">
+                                                <i class="bi bi-cart3 me-2"></i> Giỏ hàng
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Order" asp-action="History">
+                                                <i class="bi bi-clock-history me-2"></i> Lịch sử mua hàng
+                                            </a>
+                                        </li>
+                                    }
+
                                     <li>
                                         <form asp-controller="Account" asp-action="Logout" method="post">
                                             <button type="submit" class="dropdown-item">
@@ -209,10 +233,21 @@
 <script>
     var connection = new signalR.HubConnectionBuilder().withUrl("/notificationHub").build();
 
-    connection.on("ReceiveNotification", function (message) {
+    connection.on("ReceiveNotification", function (orderId, message) {
         var notificationList = document.getElementById("notificationList");
-        notificationList.innerHTML = `<li><span class="dropdown-item">${message}</span></li>` + notificationList.innerHTML;
+        var noNotification = document.getElementById("noNotification");
 
+        // Nếu có thông báo, xóa dòng "Chưa có thông báo"
+        if (noNotification) {
+            noNotification.remove();
+        }
+
+        // Thêm thông báo mới vào danh sách (link chứa đúng OrderId)
+        var newItem = document.createElement("li");
+        newItem.innerHTML = `<a class="dropdown-item" href="/Order/OrderDetails?orderId=${orderId}">${message}</a>`;
+        notificationList.prepend(newItem);
+
+        // Cập nhật số lượng thông báo
         var notificationCount = document.getElementById("notificationCount");
         notificationCount.textContent = parseInt(notificationCount.textContent || 0) + 1;
     });

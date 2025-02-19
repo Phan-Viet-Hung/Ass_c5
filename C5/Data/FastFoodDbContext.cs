@@ -11,6 +11,8 @@ namespace C5.Data
 
         public DbSet<Category> Categories { get; set; }
         public DbSet<Product> Products { get; set; }
+        public DbSet<Combo> Combos { get; set; }
+        public DbSet<ComboItem> ComboItems { get; set; }
         public DbSet<Cart> Carts { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Order> Orders { get; set; }
@@ -117,6 +119,18 @@ namespace C5.Data
                 .WithMany(o => o.Notifications)
                 .HasForeignKey(n => n.OrderId)
                 .OnDelete(DeleteBehavior.Restrict);  // Ngăn xóa Order nếu có Notification liên kết
+            modelBuilder.Entity<ComboItem>()
+        .HasOne(ci => ci.Combo)
+        .WithMany(c => c.ComboItems)
+        .HasForeignKey(ci => ci.ComboId)
+        .OnDelete(DeleteBehavior.Cascade); // Khi xóa Combo, tự động xóa ComboItem liên quan
+
+            // Cấu hình quan hệ giữa Product và ComboItem
+            modelBuilder.Entity<ComboItem>()
+                .HasOne(ci => ci.Product)
+                .WithMany()
+                .HasForeignKey(ci => ci.ProductId)
+                .OnDelete(DeleteBehavior.Restrict); // Không cho phép xóa sản phẩm nếu đang thuộc Combo
         }
 
     }

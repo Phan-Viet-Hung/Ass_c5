@@ -75,55 +75,84 @@ namespace C5.Controllers
 
             _context.CartItems.RemoveRange(cartItems);
 
+            // Lưu thông báo vào database
             var notification = new Notification
             {
                 UserId = order.UserId,
-                Message = "Đơn hàng của bạn đã được xác nhận và đang giao hàng."
+                OrderId = order.Id, // Đảm bảo OrderId đúng
+                Message = "Đơn hàng của bạn đã được xác nhận!",
+                CreatedAt = DateTime.UtcNow
             };
-
             _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
 
-            var hubContext = HttpContext.RequestServices.GetRequiredService<IHubContext<NotificationHub>>();
-            await hubContext.Clients.User(order.UserId).SendAsync("ReceiveNotification", notification.Message);
+            // Gửi thông báo real-time, TRUYỀN OrderId chứ không phải message vào link
+            await _hubContext.Clients.User(order.UserId)
+                .SendAsync("ReceiveNotification", order.Id, notification.Message);
 
             return RedirectToAction(nameof(ListOrder));
         }
 
-
-
-        public async Task<IActionResult> Checkout()
+        public async Task<IActionResult> Checkout(string? VoucherCode)
         {
-            var user = await _userManager.GetUserAsync(User);
-            var cartItems = await _context.CartItems
-                .Where(c => c.Cart.UserId == user.Id)
-                .Select(c => new CartItemViewModel
-                {
-                    ProductName = c.Product.Name,
-                    Quantity = c.Quantity,
-                    UnitPrice = c.Product.Price
-                }).ToListAsync();
-
-            var model = new CheckoutViewModel
-            {
-                CartItems = cartItems,
-                TotalAmount = cartItems.Sum(i => i.Quantity * i.UnitPrice)
-            };
-
-            return View(model);
-        }
-        [HttpPost]
-        public async Task<IActionResult> PlaceOrder(string PaymentMethod)
-        {
-
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
+                TempData["Error"] = "Bạn cần đăng nhập để thanh toán.";
                 return RedirectToAction("Login", "Account");
             }
 
             var cartItems = await _context.CartItems
-                .Include(c => c.Product) // Đảm bảo Product được load
+                .Include(c => c.Product)
+                .Include(c => c.Combo)
+                .Where(c => c.Cart.UserId == user.Id)
+                .Select(c => new CartItemViewModel
+                {
+                    ProductName = c.Product != null ? c.Product.Name : c.Combo.Name,
+                    Quantity = c.Quantity,
+                    UnitPrice = c.Product != null ? c.Product.Price : c.Combo.Price
+                })
+                .ToListAsync();
+
+            decimal totalAmount = cartItems.Sum(i => i.Quantity * i.UnitPrice);
+            decimal discountPercent = 0;
+            decimal discountAmount = 0;
+
+            if (!string.IsNullOrEmpty(VoucherCode))
+            {
+                var voucher = await _context.Vouchers.FirstOrDefaultAsync(v => v.Code == VoucherCode
+                                                                              && v.Quantity > 0
+                                                                              && v.StartDate < DateTime.UtcNow
+                                                                              && v.EndDate > DateTime.UtcNow);
+                if (voucher != null)
+                {
+                    discountPercent = voucher.DiscountPercent;
+                    discountAmount = totalAmount * (discountPercent / 100);
+                }
+            }
+
+            var model = new CheckoutViewModel
+            {
+                CartItems = cartItems,
+                TotalAmount = totalAmount,
+                VoucherCode = VoucherCode,
+                DiscountPercent = discountPercent,
+                DiscountAmount = discountAmount,
+                FinalAmount = totalAmount - discountAmount
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> PlaceOrder(string PaymentMethod, string? VoucherCode)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return RedirectToAction("Login", "Account");
+
+            var cartItems = await _context.CartItems
+                .Include(c => c.Product)
+                .Include(c => c.Combo) // Load Combo
                 .Where(c => c.Cart.UserId == user.Id)
                 .ToListAsync();
 
@@ -133,97 +162,105 @@ namespace C5.Controllers
                 return RedirectToAction("Checkout");
             }
 
-            // Kiểm tra sản phẩm nào bị null
-            if (cartItems.Any(i => i.Product == null))
-            {
-                TempData["Error"] = "Có sản phẩm không hợp lệ trong giỏ hàng. Vui lòng kiểm tra lại.";
-                return RedirectToAction("Checkout");
-            }
+            decimal totalAmount = cartItems.Sum(i => i.Quantity * (i.Product?.Price ?? i.Combo?.Price ?? 0));
+            decimal discountPercent = 0, discountAmount = 0;
 
-            var totalAmount = cartItems.Sum(i => i.Quantity * i.Product.Price);
+            if (!string.IsNullOrEmpty(VoucherCode))
+            {
+                var voucher = await _context.Vouchers.FirstOrDefaultAsync(v => v.Code == VoucherCode && v.Quantity > 0);
+                if (voucher != null)
+                {
+                    discountPercent = voucher.DiscountPercent;
+                    discountAmount = totalAmount * (discountPercent / 100);
+                    voucher.Quantity--; // Giảm số lượng voucher
+                }
+            }
 
             var order = new Order
             {
                 UserId = user.Id,
                 TotalAmount = totalAmount,
+                DiscountPercent = discountPercent,
+                DiscountAmount = discountAmount,
+                FinalAmount = totalAmount - discountAmount,
                 PaymentMethod = PaymentMethod,
-                Status = 0, // Chờ xác nhận
+                Status = OrderStatus.Pending,
                 OrderDate = DateTime.UtcNow,
+                VoucherCode = VoucherCode,
                 OrderItems = cartItems.Select(c => new OrderItem
                 {
-                    ProductId = c.ProductId,
+                    ProductId = c.ProductId != null ? c.ProductId : null,
+                    ComboId = c.ComboId != null ? c.ComboId : null, // Đảm bảo lưu ComboId
                     Quantity = c.Quantity,
-                    UnitPrice = c.Product.Price,
-                    CartItemId = c.Id // Lưu lại ID giỏ hàng
+                    UnitPrice = c.Product?.Price ?? c.Combo?.Price ?? 0
                 }).ToList()
             };
 
 
             _context.Orders.Add(order);
-
-            // Xóa giỏ hàng sau khi đặt hàng thành công
-            //_context.CartItems.RemoveRange(cartItems);
-
             await _context.SaveChangesAsync();
-
             return RedirectToAction("OrderSuccess", new { orderId = order.Id });
         }
+
 
         public async Task<IActionResult> OrderSuccess(string orderId)
         {
             var order = await _context.Orders
                 .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.Product) // Load sản phẩm từ OrderItem
+                    .ThenInclude(oi => oi.Product)  // Load sản phẩm đơn lẻ
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Combo)    // Load Combo
+                        .ThenInclude(cb => cb.ComboItems) // Load sản phẩm trong Combo
+                            .ThenInclude(cp => cp.Product) // Load thông tin sản phẩm trong Combo
                 .FirstOrDefaultAsync(o => o.Id == orderId);
 
-            if (order == null)
-            {
-                TempData["Error"] = "Không tìm thấy đơn hàng!";
-                return RedirectToAction("History");
-            }
-
+            if (order == null) return RedirectToAction("History");
 
             return View(order);
         }
+
+
         public async Task<IActionResult> History()
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-            {
-                return RedirectToAction("Login", "Account");
-            }
+            if (user == null) return RedirectToAction("Login", "Account");
 
             var orders = await _context.Orders
                 .Where(o => o.UserId == user.Id)
-                .OrderByDescending(o => o.OrderDate) // Sắp xếp theo thời gian mới nhất
+                .OrderByDescending(o => o.OrderDate)
                 .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.Product) // Load thông tin sản phẩm
+                .ThenInclude(oi => oi.Product)
+                .Include(o => o.OrderItems) // Load cả Combo
+                .ThenInclude(oi => oi.Combo)
                 .ToListAsync();
 
             return View(orders);
         }
-        [Authorize] // Yêu cầu đăng nhập
+
         public async Task<IActionResult> OrderDetails(string orderId)
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-            {
-                return RedirectToAction("Login", "Account");
-            }
+            var isAdmin = User.IsInRole("Admin"); // Kiểm tra user có phải admin không
 
-            var order = await _context.Orders
-                .Where(o => o.Id == orderId && o.UserId == user.Id) // Đảm bảo user chỉ xem đơn hàng của mình
+            // Khởi tạo truy vấn lấy Order theo ID
+            IQueryable<Order> orderQuery = _context.Orders
                 .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.Product) // Load thông tin sản phẩm
-                .FirstOrDefaultAsync();
+                    .ThenInclude(oi => oi.Product)
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Combo)
+                        .ThenInclude(cb => cb.ComboItems)
+                            .ThenInclude(cp => cp.Product);
 
-            if (order == null)
+            if (!isAdmin) // Nếu không phải admin, chỉ lấy đơn hàng của user đó
             {
-                return NotFound();
+                orderQuery = orderQuery.Where(o => o.UserId == user.Id);
             }
+
+            var order = await orderQuery.FirstOrDefaultAsync(o => o.Id == orderId); // Đặt điều kiện ID ở đây
+
+            if (order == null) return NotFound();
 
             return View(order);
         }
-
     }
 }

@@ -1,32 +1,113 @@
 ﻿@model C5.Models.Order
 
-<h2>🎉 Đặt hàng thành công!</h2>
-<p>Mã đơn hàng: <b>@Model.Id</b></p>
-<p>Ngày đặt: <b>@Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</b></p>
-<p>Phương thức thanh toán: <b>@(Model.PaymentMethod == "Cash" ? "💵 Tiền mặt" : "🏦 Chuyển khoản")</b></p>
+<div class="text-center">
+    <h2 class="text-success">🎉 Đặt hàng thành công!</h2>
+    <p class="fs-5">Cảm ơn bạn đã mua hàng! Vui lòng chờ 3-5 phút để Admin xác nhận!</p>
+</div>
 
-<h3>Chi tiết đơn hàng</h3>
-
-<table class="table">
-    <thead>
+<div class="card shadow-sm p-4 mb-4">
+    <h4 class="text-primary">📜 Thông tin đơn hàng</h4>
+    <table class="table">
         <tr>
-            <th>Sản phẩm</th>
-            <th>Số lượng</th>
-            <th>Giá</th>
+            <th>Mã đơn hàng:</th>
+            <td><strong>#@Model.Id.Substring(0, 8)</strong></td>
         </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model.OrderItems)
+        <tr>
+            <th>Ngày đặt:</th>
+            <td>@Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+        </tr>
+        <tr>
+            <th>Phương thức thanh toán:</th>
+            <td>@(Model.PaymentMethod == "Cash" ? "💵 Tiền mặt" : "🏦 Chuyển khoản")</td>
+        </tr>
+    </table>
+</div>
+
+<h4 class="text-primary">🛒 Chi tiết sản phẩm</h4>
+<div class="table-responsive">
+    <table class="table table-hover table-bordered text-center shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Sản phẩm</th>
+                <th>Số lượng</th>
+                <th>Đơn giá</th>
+                <th>Thành tiền</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.OrderItems)
+            {
+                if (item.Product != null) // Nếu là sản phẩm đơn lẻ
+                {
+                    <tr>
+                        <td>@item.Product.Name</td>
+                        <td>@item.Quantity</td>
+                        <td>@item.UnitPrice.ToString("N0") đ</td>
+                        <td class="text-danger fw-bold">@(item.Quantity * item.UnitPrice) đ</td>
+                    </tr>
+                }
+                else if (item.Combo != null) // Nếu là Combo
+                {
+                    <tr class="table-info">
+                        <td>
+                            <strong>🍱 Combo: @item.Combo.Name</strong>
+                            <ul class="text-start">
+                                @foreach (var comboItem in item.Combo.ComboItems)
+                                {
+                                    <li>@comboItem.Product.Name (@comboItem.Quantity)</li>
+                                }
+                            </ul>
+                        </td>
+                        <td>@item.Quantity</td>
+                        <td>@item.UnitPrice.ToString("N0") đ</td>
+                        <td class="text-danger fw-bold">@(item.Quantity * item.UnitPrice) đ</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+
+@if (Model.VoucherCode != null)
+{
+    <div class="card shadow-sm p-3 mb-4">
+        <h4 class="text-primary">🎟️ Mã giảm giá</h4>
+        <table class="table">
+            <tr>
+                <th>Mã voucher:</th>
+                <td><strong>@Model.VoucherCode</strong></td>
+            </tr>
+            <tr>
+                <th>Giảm giá:</th>
+                <td class="text-success">-@Model.DiscountAmount?.ToString("N0") đ (@Model.DiscountPercent% )</td>
+            </tr>
+        </table>
+    </div>
+}
+
+<div class="card shadow-sm p-3 mb-4">
+    <h4 class="text-primary">💰 Tổng tiền</h4>
+    <table class="table">
+        <tr>
+            <th>Tổng tiền:</th>
+            <td class="fw-bold text-danger">@Model.TotalAmount.ToString("N0") đ</td>
+        </tr>
+        @if (Model.DiscountAmount > 0)
         {
             <tr>
-                <td>@item.Product.Name</td>
-                <td>@item.Quantity</td>
-                <td>@item.UnitPrice.ToString("N0") đ</td>
+                <th>Giảm giá:</th>
+                <td class="text-success">-@Model.DiscountAmount?.ToString("N0") đ</td>
+            </tr>
+            <tr>
+                <th>Thành tiền sau giảm:</th>
+                <td class="fw-bold text-success">@Model.FinalAmount?.ToString("N0") đ</td>
             </tr>
         }
-    </tbody>
-</table>
+    </table>
+</div>
 
-<h4>Tổng tiền: <b>@Model.TotalAmount.ToString("N0") đ</b></h4>
-
-<a asp-action="Index" asp-controller="Home" class="btn btn-primary">🏠 Về trang chủ</a>
+<div class="text-center">
+    <a asp-action="History" asp-controller="Order" class="btn btn-info">📜 Xem lịch sử đơn hàng</a>
+    <a asp-action="Index" asp-controller="Home" class="btn btn-primary">🏠 Về trang chủ</a>
+</div>

@@ -1,0 +1,51 @@
+﻿@model C5.Models.Voucher
+@{
+    ViewData["Title"] = "Chỉnh sửa Voucher";
+}
+
+<h2 class="text-center text-warning mb-4">Chỉnh sửa Voucher</h2>
+
+<div class="card shadow p-4">
+    <form asp-action="EditVoucher" method="post">
+        <input type="hidden" asp-for="Id" />
+
+        <div class="row">
+            <div class="col-md-6">
+                <label class="form-label">Mã Voucher</label>
+                <input asp-for="Code" class="form-control" required />
+                <span asp-validation-for="Code" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Giảm giá (%)</label>
+                <input asp-for="DiscountPercent" type="number" class="form-control" required />
+                <span asp-validation-for="DiscountPercent" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <label class="form-label">Số lượng</label>
+                <input asp-for="Quantity" type="number" class="form-control" required />
+                <span asp-validation-for="Quantity" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Ngày bắt đầu</label>
+                <input asp-for="StartDate" type="date" class="form-control" required />
+                <span asp-validation-for="StartDate" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <label class="form-label">Ngày hết hạn</label>
+                <input asp-for="EndDate" type="date" class="form-control" required />
+                <span asp-validation-for="EndDate" class="text-danger"></span>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success mt-4">💾 Cập nhật</button>
+        <a href="@Url.Action("ListVoucher")" class="btn btn-secondary mt-4">🔙 Quay lại</a>
+    </form>
+</div>

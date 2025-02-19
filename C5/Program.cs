@@ -1,5 +1,6 @@
 ﻿using C5.Data;
 using C5.Models;
+using C5.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +11,7 @@ builder.Services.AddSignalR();
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<FastFoodDbContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<CategoryService>();
 builder.Services.AddIdentity<FastFoodUser, IdentityRole>(options =>
 {
     options.Password.RequireDigit = true;
@@ -30,6 +32,14 @@ builder.Services.AddIdentity<FastFoodUser, IdentityRole>(options =>
 })
             .AddEntityFrameworkStores<FastFoodDbContext>()
             .AddDefaultTokenProviders();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy => policy.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
+});
+builder.Services.AddHttpClient();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -38,7 +48,11 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
+    app.UseSwagger();
 }
+
+
+app.UseCors("AllowAll");
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

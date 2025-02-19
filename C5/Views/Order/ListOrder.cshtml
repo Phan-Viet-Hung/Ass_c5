@@ -31,7 +31,7 @@
                         <td>@(index++)</td>
                         <td>@order.User.FullName (@order.User.Email)</td>
                         <td>@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
-                        <td class="text-danger fw-bold">@order.TotalAmount.ToString("C")</td>
+                        <td class="text-danger fw-bold">@order.FinalAmount</td>
                         <td>
                             @switch ((OrderStatus)order.Status)
                             {
@@ -57,7 +57,7 @@
                                     <button type="submit" class="btn btn-success btn-sm">✅ Xác nhận</button>
                                 </form>
                             }
-                            <a asp-action="OrderDetails" asp-route-id="@order.Id" class="btn btn-primary btn-sm">📄 Chi tiết</a>
+                            <a href="/Order/OrderDetails?orderId=@order.Id"  class="btn btn-primary btn-sm">📄 Chi tiết</a>
                         </td>
                     </tr>
                 }

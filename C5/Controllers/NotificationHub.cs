@@ -3,8 +3,10 @@ using System.Threading.Tasks;
 
 public class NotificationHub : Hub
 {
-    public async Task SendNotification(string userId, string message)
+    public async Task SendNotification(string userId, string orderId, string message)
     {
-        await Clients.User(userId).SendAsync("ReceiveNotification", message);
+        await Clients.User(userId).SendAsync("ReceiveNotification", orderId, message);
     }
 }
+
+

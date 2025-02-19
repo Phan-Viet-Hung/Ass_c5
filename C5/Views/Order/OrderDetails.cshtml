@@ -1,63 +1,118 @@
 ﻿@model C5.Models.Order
-@using static C5.Models.Order
-@using static C5.Models.FastFoodUser
-<h2>Chi tiết đơn hàng</h2>
 
-<table class="table">
-    <tr>
-        <th>Mã đơn hàng:</th>
-        <td>@Model.Id</td>
-    </tr>
-    <tr>
-        <th>Ngày đặt:</th>
-        <td>@Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
-    </tr>
-    <tr>
-        <th>Tổng tiền:</th>
-        <td>@Model.TotalAmount.ToString("N0") VNĐ</td>
-    </tr>
-    <tr>
-        <th>Trạng thái:</th>
-        <td>
-            @{
-                string statusText = Model.Status switch
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-gradient text-white text-center py-3" style="background: linear-gradient(90deg, #4CAF50, #2E7D32);">
+            <h3 class="text-black mb-0">🛍️ Chi tiết đơn hàng</h3>
+        </div>
+        <div class="card-body">
+            <table class="table table-borderless">
+                <tr>
+                    <th class="text-muted">📦 Mã đơn hàng:</th>
+                    <td><strong>#@Model.Id</strong></td>
+                </tr>
+                <tr>
+                    <th class="text-muted">📅 Ngày đặt hàng:</th>
+                    <td>@Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                </tr>
+                <tr>
+                    <th class="text-muted">💳 Phương thức thanh toán:</th>
+                    <td>@Model.PaymentMethod</td>
+                </tr>
+                <tr>
+                    <th class="text-muted">📌 Trạng thái:</th>
+                    <td>
+                        <span class="badge @(Model.Status.Equals("Pending") ? "bg-warning" : Model.Status.Equals("Delivering") ? "bg-info" : "bg-success") fs-6">
+                            @Model.Status
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="text-muted">💰 Tổng tiền:</th>
+                    <td class="text-danger fw-bold fs-5">@Model.TotalAmount.ToString("C")</td>
+                </tr>
+                @if (!string.IsNullOrEmpty(Model.VoucherCode))
                 {
-                    OrderStatus.Pending => "Chờ xác nhận",
-                    OrderStatus.Delivering => "Đang giao",
-                    OrderStatus.Completed => "Hoàn thành",
-                    OrderStatus.Canceled => "Đã hủy",
-                };
+                    <tr>
+                        <th class="text-muted">🎟️ Voucher:</th>
+                        <td>@Model.VoucherCode (-@Model.DiscountAmount?.ToString("C"))</td>
+                    </tr>
+                }
+                <tr>
+                    <th class="text-muted">✅ Thành tiền:</th>
+                    <td class="text-success fw-bold fs-4">@Model.FinalAmount?.ToString("C")</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h4 class="text-primary">📌 Sản phẩm trong đơn hàng</h4>
+        <div class="table-responsive">
+            <table class="table table-hover text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th>📌 Tên sản phẩm</th>
+                        <th>📦 Số lượng</th>
+                        <th>💵 Đơn giá</th>
+                        <th>💲 Tổng</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.OrderItems.Where(i => i.Product != null))
+                    {
+                        <tr class="align-middle">
+                            <td><strong>@item.Product.Name</strong></td>
+                            <td>@item.Quantity</td>
+                            <td>@item.UnitPrice.ToString("C")</td>
+                            <td class="fw-bold text-danger">@(item.Quantity * item.UnitPrice)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h4 class="text-success">🎁 Combo trong đơn hàng</h4>
+        <div class="accordion" id="comboAccordion">
+            @foreach (var item in Model.OrderItems.Where(i => i.Combo != null))
+            {
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold text-success" type="button" data-bs-toggle="collapse" data-bs-target="#combo-@item.Combo.Id">
+                            🍱 @item.Combo.Name
+                        </button>
+                    </h2>
+                    <div id="combo-@item.Combo.Id" class="accordion-collapse collapse" data-bs-parent="#comboAccordion">
+                        <div class="accordion-body">
+                            <ul class="list-group">
+                                @foreach (var comboItem in item.Combo.ComboItems)
+                                {
+                                    <li class="list-group-item">
+                                        <span class="fw-bold">🔹 @comboItem.Product.Name</span> (x@comboItem.Quantity)
+                                    </li>
+                                }
+                            </ul>
+                            <div class="mt-3">
+                                <span class="fw-bold">📦 Số lượng: @item.Quantity</span> |
+                                <span class="text-danger fw-bold">💰 @item.UnitPrice.ToString("C")</span> |
+                                <span class="text-danger fw-bold">💲 Tổng: @(item.Quantity * item.UnitPrice)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             }
-            @statusText
-        </td>
-    </tr>
-    <tr>
-        <th>Địa chỉ:</th>
-        <td>@Model.User.Address</td>
-    </tr>
-</table>
+        </div>
+    </div>
 
-<h3>Sản phẩm trong đơn hàng</h3>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Tên sản phẩm</th>
-            <th>Số lượng</th>
-            <th>Đơn giá</th>
-            <th>Thành tiền</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model.OrderItems)
-        {
-            <tr>
-                <td>@item.Product.Name</td>
-                <td>@item.Quantity</td>
-                <td>@item.UnitPrice.ToString("N0") VNĐ</td>
-                <td>@(item.Quantity * item.UnitPrice) VNĐ</td>
-            </tr>
-        }
-    </tbody>
-</table>
-
-<a href="@Url.Action("History", "Order")" class="btn btn-secondary">Quay lại</a>
+    <div class="text-center mt-4">
+        <a class="btn btn-secondary px-4 shadow-sm" href="@Url.Action("History", "Order")">
+            <i class="bi bi-arrow-left"></i> Quay lại lịch sử
+        </a>
+    </div>
+</div>

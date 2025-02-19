@@ -18,20 +18,59 @@ namespace C5.Controllers
             _logger = logger;
         }
 
-        public async Task<IActionResult> Index(int? page)
+        public async Task<IActionResult> Index(int? page, string searchCombo, string searchProduct)
         {
             int pageSize = 6; // Hiển thị 6 sản phẩm mỗi trang
             int pageNumber = page ?? 1;
 
-            var products = await _context.Products
-                .Where(p => p.IsActive)
-                .OrderByDescending(p => p.CreatedAt)
-                .ToListAsync(); // Lấy danh sách sản phẩm trước
+            // Query sản phẩm còn hàng
+            var productsQuery = _context.Products
+                .Where(p => p.IsActive && p.StockQuantity > 0);
 
-            var pagedProducts = products.ToPagedList(pageNumber, pageSize); // Áp dụng phân trang
+            // Query combo còn hàng
+            var combosQuery = _context.Combos
+                .Where(c => c.IsActive && c.StockQuantity > 0);
 
-            return View(pagedProducts);
+            // Tìm kiếm nếu có
+            if (!string.IsNullOrEmpty(searchCombo))
+            {
+                searchCombo = searchCombo.ToLower();
+                combosQuery = combosQuery.Where(c => c.Name.ToLower().Contains(searchCombo));
+            }
+
+            if (!string.IsNullOrEmpty(searchProduct))
+            {
+                searchProduct = searchProduct.ToLower();
+                productsQuery = productsQuery.Where(p => p.Name.ToLower().Contains(searchProduct));
+            }
+
+            // Áp dụng sắp xếp theo bảng chữ cái
+            productsQuery = productsQuery.OrderBy(p => p.Name);
+            combosQuery = combosQuery.OrderBy(c => c.Name);
+
+            // Thực hiện truy vấn
+            var products = await productsQuery.ToListAsync(); // Lấy danh sách sản phẩm
+            var combos = await combosQuery.ToListAsync(); // Lấy danh sách combo
+
+            // Phân trang bằng ToPagedList()
+            var pagedProducts = products.ToPagedList(pageNumber, pageSize);
+            var pagedCombos = combos.ToPagedList(pageNumber, pageSize);
+
+            // Lưu giá trị tìm kiếm để hiển thị lại trên giao diện
+            ViewBag.ComboSearch = searchCombo;
+            ViewBag.ProductSearch = searchProduct;
+
+            // Kết hợp vào ViewModel
+            var model = new HomeViewModel
+            {
+                Products = pagedProducts,
+                Combos = pagedCombos
+            };
+
+            return View(model);
         }
+
+
 
         public async Task<IActionResult> DetailsProduct(string id)
         {

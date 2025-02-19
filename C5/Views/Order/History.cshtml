@@ -1,47 +1,60 @@
 ﻿@model List<C5.Models.Order>
 @using static C5.Models.Order
-<h2>Lịch sử mua hàng</h2>
+
+<h2 class="text-center my-4">📜 Lịch sử mua hàng</h2>
 
 @if (!Model.Any())
 {
-    <p>Bạn chưa có đơn hàng nào.</p>
+    <div class="alert alert-warning text-center">
+        <i class="fas fa-exclamation-circle"></i> Bạn chưa có đơn hàng nào.
+    </div>
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Mã đơn hàng</th>
-                <th>Ngày đặt</th>
-                <th>Tổng tiền</th>
-                <th>Trạng thái</th>
-                <th>Chi tiết</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var order in Model)
-            {
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered text-center shadow-sm">
+            <thead class="table-dark">
                 <tr>
-                    <td>@order.Id</td>
-                    <td>@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
-                    <td>@order.TotalAmount.ToString("N0") VNĐ</td>
-                    <td>
-                        @{
-                            string statusText = order.Status switch
-                            {
-                                OrderStatus.Pending => "Chờ xác nhận",
-                                OrderStatus.Delivering => "Đang giao",
-                                OrderStatus.Completed => "Hoàn thành",
-                                OrderStatus.Canceled => "Đã hủy"
-                            };
-                        }
-                        @statusText
-                    </td>
-                    <td>
-                        <a href="@Url.Action("OrderDetails", "Order", new { orderId = order.Id })" class="btn btn-primary">Xem</a>
-                    </td>
+                    <th>Mã đơn hàng</th>
+                    <th>Ngày đặt</th>
+                    <th>Tổng tiền</th>
+                    <th>Trạng thái</th>
+                    <th>Chi tiết</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var order in Model)
+                {
+                    <tr>
+                        <td><strong>#@order.Id.Substring(0, 8)</strong></td>
+                        <td>@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td class="text-danger fw-bold">@order.FinalAmount?.ToString("C") VNĐ</td>
+                        <td>
+                            @switch (order.Status)
+                            {
+                                case OrderStatus.Pending:
+                                    <span class="badge bg-warning text-dark">⏳ Chờ xác nhận</span>
+                                    break;
+                                case OrderStatus.Delivering:
+                                    <span class="badge bg-info">🚚 Đang giao</span>
+                                    break;
+                                case OrderStatus.Completed:
+                                    <span class="badge bg-success">✅ Hoàn thành</span>
+                                    break;
+                                case OrderStatus.Canceled:
+                                    <span class="badge bg-danger">❌ Đã hủy</span>
+                                    break;
+                            }
+                        </td>
+                        <td>
+                            <a href="@Url.Action("OrderDetails", "Order", new { orderId = order.Id })"
+                               class="btn btn-primary btn-sm">
+                                📄 Xem chi tiết
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }

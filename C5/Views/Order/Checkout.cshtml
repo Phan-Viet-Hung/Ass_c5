@@ -28,9 +28,28 @@
 
 <hr>
 
+<h4>Nhập mã giảm giá:</h4>
+<form method="post" asp-action="Checkout">
+    <div class="input-group mb-3">
+        <input type="text" name="VoucherCode" class="form-control" placeholder="Nhập mã giảm giá" value="@Model.VoucherCode">
+        <button type="submit" class="btn btn-success">Áp dụng</button>
+    </div>
+</form>
+
+@if (Model.DiscountPercent > 0)
+{
+    <h5>Giảm giá: <b>@Model.DiscountPercent% (-@Model.DiscountAmount.ToString("N0") đ)</b></h5>
+    <h4>Thành tiền sau giảm: <b>@Model.FinalAmount.ToString("N0") đ</b></h4>
+}
+
+<hr>
+
 <h4>Chọn phương thức thanh toán:</h4>
 
 <form asp-action="PlaceOrder" asp-controller="Order" method="post">
+    <input type="hidden" name="FinalAmount" value="@Model.FinalAmount" />
+    <input type="hidden" name="VoucherCode" value="@Model.VoucherCode" />
+
     <div class="form-check">
         <input class="form-check-input" type="radio" name="PaymentMethod" value="Cash" checked>
         <label class="form-check-label">💵 Thanh toán khi nhận hàng</label>
