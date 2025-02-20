@@ -1,17 +1,27 @@
 ﻿using C5.Data;
 using C5.Models;
-using C5.Services;
+using C5.Models.Momo;
+using C5.Service.Momo;
+using C5.Service.VNPay;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
+TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+TimeZoneInfo.ClearCachedData();
+CultureInfo cultureInfo = new CultureInfo("vi-VN");
 
+CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 // Add services to the container.
+//MOMO API
+builder.Services.Configure<MomoOptionModel>(builder.Configuration.GetSection("MomoAPI"));
+builder.Services.AddScoped<IMomoService, MomoService>();
 builder.Services.AddSignalR();
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<FastFoodDbContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddScoped<CategoryService>();
 builder.Services.AddIdentity<FastFoodUser, IdentityRole>(options =>
 {
     options.Password.RequireDigit = true;
@@ -39,7 +49,10 @@ builder.Services.AddCors(options =>
                         .AllowAnyMethod()
                         .AllowAnyHeader());
 });
+//VNPay API
 builder.Services.AddHttpClient();
+builder.Services.AddScoped<IVnPayService, VnPayService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -56,7 +69,6 @@ app.UseCors("AllowAll");
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();

@@ -23,7 +23,7 @@ namespace C5.Models
         public string Comment { get; set; }
 
         [Required]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"));
 
         [ForeignKey(nameof(UserId))]
         public virtual FastFoodUser? User { get; set; }

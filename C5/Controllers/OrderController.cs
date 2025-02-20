@@ -11,19 +11,26 @@ using X.PagedList.Mvc.Core;
 using static C5.Models.Order;
 using X.PagedList.Extensions;
 using Microsoft.AspNetCore.SignalR;
+using C5.Service.VNPay;
+using C5.Models.VNPay;
+using C5.Service.Momo;
 
 namespace C5.Controllers
 {
     public class OrderController : Controller
     {
+        private readonly IVnPayService _vnPayService;
+        private readonly IMomoService _momoService;
         private readonly FastFoodDbContext _context;
         private readonly UserManager<FastFoodUser> _userManager;
         private readonly IHubContext<NotificationHub> _hubContext;
-        public OrderController(FastFoodDbContext context, UserManager<FastFoodUser> userManager,IHubContext<NotificationHub> hubContext)
+        public OrderController(FastFoodDbContext context, UserManager<FastFoodUser> userManager,IHubContext<NotificationHub> hubContext, IVnPayService vnPayService, IMomoService momoService)
         {
             _hubContext = hubContext;
             _context = context;
             _userManager = userManager;
+            _vnPayService = vnPayService;
+            _momoService = momoService;
         }
         [Authorize(Roles = "Admin")] // Chỉ cho phép người dùng Admin đã đăng nhập
                                      // Danh sách đơn hàng với phân trang
@@ -92,6 +99,28 @@ namespace C5.Controllers
 
             return RedirectToAction(nameof(ListOrder));
         }
+        [HttpPost]
+        public async Task<IActionResult> CancelOrder(string orderId)
+        {
+            var order = await _context.Orders.FindAsync(orderId);
+            if (order == null)
+            {
+                TempData["Error"] = "Không tìm thấy đơn hàng.";
+                return RedirectToAction("ListOrder");
+            }
+
+            if (order.Status != OrderStatus.Pending)
+            {
+                TempData["Error"] = "Chỉ có thể hủy đơn hàng khi đang chờ xác nhận.";
+                return RedirectToAction("ListOrder");
+            }
+
+            order.Status = OrderStatus.Canceled;
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Đơn hàng đã được hủy thành công.";
+            return RedirectToAction("ListOrder");
+        }
 
         public async Task<IActionResult> Checkout(string? VoucherCode)
         {
@@ -145,14 +174,14 @@ namespace C5.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PlaceOrder(string PaymentMethod, string? VoucherCode)
+        public async Task<IActionResult> PlaceOrder(string PaymentMethod, string? VoucherCode,OrderInfo MomoModel,PaymentInformationModel vnPayModel )
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return RedirectToAction("Login", "Account");
 
             var cartItems = await _context.CartItems
                 .Include(c => c.Product)
-                .Include(c => c.Combo) // Load Combo
+                .Include(c => c.Combo)
                 .Where(c => c.Cart.UserId == user.Id)
                 .ToListAsync();
 
@@ -184,23 +213,41 @@ namespace C5.Controllers
                 DiscountAmount = discountAmount,
                 FinalAmount = totalAmount - discountAmount,
                 PaymentMethod = PaymentMethod,
-                Status = OrderStatus.Pending,
-                OrderDate = DateTime.UtcNow,
+                Status = PaymentMethod == "VNPay" ? OrderStatus.WaitingForPayment : OrderStatus.Pending,
+                OrderDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")),
                 VoucherCode = VoucherCode,
                 OrderItems = cartItems.Select(c => new OrderItem
                 {
-                    ProductId = c.ProductId != null ? c.ProductId : null,
-                    ComboId = c.ComboId != null ? c.ComboId : null, // Đảm bảo lưu ComboId
+                    ProductId = c.ProductId,
+                    ComboId = c.ComboId,
                     Quantity = c.Quantity,
                     UnitPrice = c.Product?.Price ?? c.Combo?.Price ?? 0
                 }).ToList()
             };
+            //if (PaymentMethod == "VNPay")
+            //{
+            //    var url = _vnPayService.CreatePaymentUrl(vnPayModel,HttpContext);
 
-
+            //    return Redirect(url);
+            //}
+            if(PaymentMethod == "MOMO")
+            {
+                var response = await _momoService.CreatePaymentAsync(MomoModel);
+                return Redirect(response.PayUrl);
+            }
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
+
+            // Nếu là VNPay, chuyển hướng đến trang thanh toán VNPay
+            
+            if(PaymentMethod == null)
+            {
+                _context.Orders.Remove(order);
+                await _context.SaveChangesAsync();
+            }
             return RedirectToAction("OrderSuccess", new { orderId = order.Id });
         }
+
 
 
         public async Task<IActionResult> OrderSuccess(string orderId)
@@ -262,5 +309,13 @@ namespace C5.Controllers
 
             return View(order);
         }
+        [HttpGet]
+        public IActionResult PaymentCallbackVnpay()
+        {
+            var response = _vnPayService.PaymentExecute(Request.Query);
+
+            return Json(response);
+        }
+
     }
 }

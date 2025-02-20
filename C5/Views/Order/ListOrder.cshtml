@@ -50,15 +50,23 @@
                             }
                         </td>
                         <td>
-                            @if ((OrderStatus)order.Status == OrderStatus.Pending)
-                            {
-                                <form asp-action="ConfirmOrder" method="post">
+                        <td>
+                                @if ((OrderStatus)order.Status == OrderStatus.Pending)
+                                {
+                                <form asp-action="ConfirmOrder" method="post" class="d-inline">
                                     <input type="hidden" name="orderId" value="@order.Id" />
                                     <button type="submit" class="btn btn-success btn-sm">✅ Xác nhận</button>
                                 </form>
-                            }
-                            <a href="/Order/OrderDetails?orderId=@order.Id"  class="btn btn-primary btn-sm">📄 Chi tiết</a>
+
+                                <form asp-action="CancelOrder" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');">
+                                    <input type="hidden" name="orderId" value="@order.Id" />
+                                    <button type="submit" class="btn btn-danger btn-sm">❌ Hủy</button>
+                                </form>
+                                }
+
+                            <a href="/Order/OrderDetails?orderId=@order.Id" class="btn btn-primary btn-sm">📄 Chi tiết</a>
                         </td>
+
                     </tr>
                 }
             }

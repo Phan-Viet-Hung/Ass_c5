@@ -23,14 +23,15 @@ namespace C5.Models
             Pending = 0,
             Delivering = 1,
             Completed = 2,
-            Canceled = 3
+            Canceled = 3,
+            WaitingForPayment = 4
         }
 
         public OrderStatus Status { get; set; } = OrderStatus.Pending;
         [Required]
         public string PaymentMethod { get; set; }
         [Required]
-        public DateTime OrderDate { get; set; } = DateTime.UtcNow;
+        public DateTime OrderDate { get; set; } = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"));
 
         [ForeignKey(nameof(UserId))]
         public virtual FastFoodUser User { get; set; }
@@ -46,5 +47,6 @@ namespace C5.Models
         public decimal? DiscountAmount { get; internal set; }
         public decimal? FinalAmount { get; internal set; }
         public string? VoucherCode { get; internal set; }
+        public int OrderInformation { get; internal set; }
     }
 }

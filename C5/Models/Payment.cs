@@ -21,7 +21,7 @@ namespace C5.Models
         public int Status { get; set; } = 0; // 0: Chờ thanh toán, 1: Đã thanh toán
 
         [Required]
-        public DateTime PaymentDate { get; set; } = DateTime.UtcNow;
+        public DateTime PaymentDate { get; set; } = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"));
 
         [ForeignKey(nameof(OrderId))]
         public virtual Order Order { get; set; }

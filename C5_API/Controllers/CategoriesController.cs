@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using C5.Data;
@@ -21,38 +19,60 @@ namespace C5_API.Controllers
             _context = context;
         }
 
-        // GET: api/Categories
+        // 🟢 Lấy danh sách danh mục
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Category>>> GetCategories()
         {
-            return await _context.Categories.ToListAsync();
+            var categories = await _context.Categories
+                .Include(c => c.Products) // Chỉ lấy sản phẩm trong danh mục
+                .Select(c => new
+                {
+                    c.Id,
+                    c.Name,
+                    Products = c.Products.Select(p => new
+                    {
+                        p.Id,
+                        p.Name,
+                        p.Price,
+                        p.Image,
+                        p.IsActive
+                    })
+                })
+                .ToListAsync();
+
+            return Ok(categories);
         }
 
-        // GET: api/Categories/5
+
+        // 🟢 Lấy chi tiết danh mục theo ID
         [HttpGet("{id}")]
         public async Task<ActionResult<Category>> GetCategory(string id)
         {
-            var category = await _context.Categories.FindAsync(id);
+            var category = await _context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
+            if (category == null)
+            {
+                return NotFound();
+            }
+            return category;
+        }
 
+        // 🟡 Cập nhật danh mục
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutCategory(string id, Category updatedCategory)
+        {
+            if (id != updatedCategory.Id)
+            {
+                return BadRequest();
+            }
+
+            var category = await _context.Categories.FindAsync(id);
             if (category == null)
             {
                 return NotFound();
             }
 
-            return category;
-        }
-
-        // PUT: api/Categories/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutCategory(string id, Category category)
-        {
-            if (id != category.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(category).State = EntityState.Modified;
+            // Cập nhật từng thuộc tính thay vì gán toàn bộ đối tượng
+            category.Name = updatedCategory.Name;
 
             try
             {
@@ -73,11 +93,15 @@ namespace C5_API.Controllers
             return NoContent();
         }
 
-        // POST: api/Categories
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // 🟢 Thêm danh mục
         [HttpPost]
         public async Task<ActionResult<Category>> PostCategory(Category category)
         {
+            if (CategoryExists(category.Id))
+            {
+                return Conflict("Danh mục đã tồn tại.");
+            }
+
             _context.Categories.Add(category);
             try
             {
@@ -85,20 +109,13 @@ namespace C5_API.Controllers
             }
             catch (DbUpdateException)
             {
-                if (CategoryExists(category.Id))
-                {
-                    return Conflict();
-                }
-                else
-                {
-                    throw;
-                }
+                return BadRequest("Lỗi khi thêm danh mục.");
             }
 
-            return CreatedAtAction("GetCategory", new { id = category.Id }, category);
+            return CreatedAtAction(nameof(GetCategory), new { id = category.Id }, category);
         }
 
-        // DELETE: api/Categories/5
+        // 🔴 Xóa danh mục (kiểm tra sản phẩm trước khi xóa)
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCategory(string id)
         {
@@ -108,8 +125,28 @@ namespace C5_API.Controllers
                 return NotFound();
             }
 
+            // Kiểm tra xem có sản phẩm nào thuộc danh mục này không
+            var productsInCategory = await _context.Products.Where(p => p.CategoryId == id).ToListAsync();
+            if (productsInCategory.Any())
+            {
+                // Đánh dấu sản phẩm là hết hàng và bỏ liên kết danh mục
+                foreach (var product in productsInCategory)
+                {
+                    product.IsActive = false;
+                    product.CategoryId = null;
+                }
+                _context.Products.UpdateRange(productsInCategory);
+            }
+
             _context.Categories.Remove(category);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                return BadRequest("Không thể xóa danh mục này vì có dữ liệu liên quan.");
+            }
 
             return NoContent();
         }
