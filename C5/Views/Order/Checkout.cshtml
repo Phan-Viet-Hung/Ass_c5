@@ -59,14 +59,14 @@
         <input class="form-check-input" type="radio" name="PaymentMethod" value="BankTransfer">
         <label class="form-check-label">🏦 Chuyển khoản ngân hàng</label>
     </div>
-    @* <div>
+    <div>
         <input type="radio" id="vnpay" name="PaymentMethod" value="VNPay">
         <input type="hidden" name="Name" value="@User.Identity.Name" />
         <input type="hidden" name="Amount" value="@Model.FinalAmount" />
         <input type="hidden" name="OrderDescription" value="Thanh toán qua Vnpay FastFoodStore" />
-        <input type="hidden" name="OrderType" value="orher" />
+        <input type="hidden" name="OrderType" value="other" />
         <label for="vnpay">Thanh toán qua VNPay</label>
-    </div> *@
+    </div>
     <div>
         <input type="radio" id="momo" name="PaymentMethod" value="MOMO">
         <input type="hidden" name="FullName" value="@User.Identity.Name" />

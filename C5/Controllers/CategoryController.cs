@@ -1,27 +1,27 @@
-﻿using System;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using C5.Models;
+using C5.Service;
+using C5.Services;
 using C5.Data;
 
 namespace C5.Controllers
 {
     public class CategoryController : Controller
     {
-        private readonly FastFoodDbContext _context;
+        private readonly CategoryService _categoryService;
 
-        public CategoryController(FastFoodDbContext context)
+        public CategoryController(CategoryService service)
         {
-            _context = context;
+            _categoryService = service;
         }
 
-        // 🟢 Hiển thị danh sách danh mục từ API
+        // Hiển thị danh sách danh mục
         [HttpGet]
         public async Task<IActionResult> ListCategory()
         {
-            var categories = await _context.Categories.AsNoTracking().ToListAsync();
+            var categories = await _categoryService.GetAllCategories();
             return View(categories);
         }
 
@@ -34,41 +34,35 @@ namespace C5.Controllers
 
         // Xử lý thêm danh mục
         [HttpPost]
-        public async Task<IActionResult> AddCategory([Bind("Id, Name")] Category ct)
+        public async Task<IActionResult> AddCategory(Category category)
         {
             if (!ModelState.IsValid)
             {
-                return View(ct);
+                ModelState.AddModelError("", "Dữ liệu không hợp lệ.");
+                return View(category);
             }
 
-            try
+            var success = await _categoryService.CreateCategory(category);
+
+            if (!success)
             {
-                _context.Categories.Add(ct);
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Danh mục đã được thêm thành công!";
-                return RedirectToAction(nameof(ListCategory));
+                ModelState.AddModelError("", "Lỗi khi thêm danh mục. API không phản hồi thành công.");
+                return View(category);
             }
-            catch (DbUpdateException ex)
-            {
-                ModelState.AddModelError("", "Có lỗi khi lưu dữ liệu. Vui lòng thử lại.");
-                Console.WriteLine(ex);
-                return View(ct);
-            }
+
+            TempData["Success"] = "Danh mục đã được thêm!";
+            return RedirectToAction(nameof(ListCategory));
         }
+
 
         // Trang chỉnh sửa danh mục
         [HttpGet]
         public async Task<IActionResult> EditCategory(string id)
         {
-            if (string.IsNullOrEmpty(id))
-            {
-                return RedirectToAction(nameof(ListCategory));
-            }
-
-            var category = await _context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
+            var category = await _categoryService.GetCategoryById(id);
             if (category == null)
             {
-                TempData["Error"] = "Không tìm thấy danh mục này.";
+                TempData["Error"] = "Không tìm thấy danh mục.";
                 return RedirectToAction(nameof(ListCategory));
             }
 
@@ -77,74 +71,32 @@ namespace C5.Controllers
 
         // Xử lý cập nhật danh mục
         [HttpPost]
-        public async Task<IActionResult> EditCategory(Category ct)
+        public async Task<IActionResult> EditCategory(Category category)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid) return View(category);
+
+            var success = await _categoryService.UpdateCategory(category.Id, category);
+            if (!success)
             {
-                return View(ct);
+                ModelState.AddModelError("", "Lỗi khi cập nhật danh mục.");
+                return View(category);
             }
 
-            var category = await _context.Categories.FindAsync(ct.Id);
-            if (category == null)
-            {
-                TempData["Error"] = "Không tìm thấy danh mục này.";
-                return RedirectToAction(nameof(ListCategory));
-            }
-
-            try
-            {
-                category.Name = ct.Name;
-                _context.Categories.Update(category);
-                await _context.SaveChangesAsync();
-
-                TempData["Success"] = "Danh mục đã được cập nhật!";
-                return RedirectToAction(nameof(ListCategory));
-            }
-            catch (DbUpdateException ex)
-            {
-                ModelState.AddModelError("", "Có lỗi khi cập nhật. Vui lòng thử lại.");
-                Console.WriteLine(ex);
-                return View(ct);
-            }
+            TempData["Success"] = "Danh mục đã được cập nhật!";
+            return RedirectToAction(nameof(ListCategory));
         }
 
         // Xóa danh mục
-        [HttpPost]
         public async Task<IActionResult> DeleteCategory(string id)
         {
-            var category = await _context.Categories.FindAsync(id);
-            if (category == null)
+            var success = await _categoryService.DeleteCategory(id);
+            if (!success)
             {
-                TempData["Error"] = "Không tìm thấy danh mục.";
+                TempData["Error"] = "Không thể xóa danh mục.";
                 return RedirectToAction(nameof(ListCategory));
             }
 
-            // Tìm tất cả sản phẩm thuộc danh mục này
-            var productsInCategory = await _context.Products.Where(p => p.CategoryId == id).ToListAsync();
-
-            if (productsInCategory.Any())
-            {
-                // Đánh dấu sản phẩm là hết hàng và hủy liên kết danh mục
-                foreach (var product in productsInCategory)
-                {
-                    product.IsActive = false;
-                    product.CategoryId = null;
-                }
-                _context.Products.UpdateRange(productsInCategory);
-            }
-
-            try
-            {
-                _context.Categories.Remove(category);
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Danh mục đã bị xóa.";
-            }
-            catch (DbUpdateException ex)
-            {
-                TempData["Error"] = "Không thể xóa danh mục này vì có dữ liệu liên quan.";
-                Console.WriteLine(ex);
-            }
-
+            TempData["Success"] = "Danh mục đã bị xóa.";
             return RedirectToAction(nameof(ListCategory));
         }
     }

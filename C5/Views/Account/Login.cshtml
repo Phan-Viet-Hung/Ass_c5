@@ -1,14 +1,9 @@
 ﻿@model C5.Models.Login
 
-@{
-    ViewData["Title"] = "Đăng Nhập";
-    var login = TempData["Login"];
-}
 <link rel="stylesheet" href="~/css/Login.css" asp-append-version="true" />
 
 <div class="container">
 <div class="login-container">
-    <h2>@login</h2>
     <h3>Đăng Nhập</h3>
 
     <form asp-action="Login" asp-controller="Account" method="post">
@@ -27,7 +22,7 @@
         <button type="submit" class="btn btn-login w-100">Đăng nhập</button>
             <!-- Nút đăng nhập -->
             <div id="g_id_onload"
-                 data-client_id="YOUR_GOOGLE_CLIENT_ID"
+                 data-client_id="941690888762-nft09865f6s8vditcptcb6p3kltl7n3a.apps.googleusercontent.com"
                  data-context="signin"
                  data-ux_mode="popup"
                  data-callback="handleCredentialResponse"
@@ -46,23 +41,21 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
     function handleCredentialResponse(response) {
-        // Lấy token ID từ Google
         const idToken = response.credential;
         console.log("Google ID Token:", idToken);
 
-        // Gửi token đến server để xác thực
-        fetch('/Auth/GoogleLogin', {
+        fetch('/Account/GoogleLogin', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token: idToken })
         })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.href = "/";
-                } else {
-                    alert("Đăng nhập thất bại!");
-                }
-            });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = "/";
+            } else {
+                alert("Đăng nhập thất bại!");
+            }
+        });
     }
 </script>

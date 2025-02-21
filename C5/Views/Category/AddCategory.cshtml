@@ -10,21 +10,38 @@
 </form>
 
 <script>
-    document.getElementById("addCategoryForm").addEventListener("submit", function(e) {
-        e.preventDefault();  // Ngừng hành động mặc định của form
+    document.getElementById("addCategoryForm").addEventListener("submit", function (e) {
+        e.preventDefault();  // Ngăn chặn hành động mặc định
 
-        let categoryName = document.getElementById("categoryName").value;
+        let categoryName = document.getElementById("categoryName").value.trim();
 
-        fetch('/api/categories', {
+        if (!categoryName) {
+            alert("Vui lòng nhập tên danh mục!");
+            return;
+        }
+
+        let data = { id: null, name: categoryName };  // Thêm id nếu API yêu cầu
+
+        console.log("Gửi dữ liệu:", data); // Kiểm tra dữ liệu trước khi gửi
+
+        fetch('https://localhost:7151/api/categoryapi', { // Kiểm tra URL API
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: categoryName })
+            body: JSON.stringify(data)
         })
-        .then(response => response.json())
-        .then(data => {
-            alert("Thêm danh mục thành công!");
-            location.reload();  // Tải lại trang
-        })
-        .catch(error => console.error('Lỗi:', error));
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Lỗi: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert("Thêm danh mục thành công!");
+                location.reload();  // Tải lại trang sau khi thêm
+            })
+            .catch(error => {
+                console.error('Lỗi:', error);
+                alert("Có lỗi xảy ra, vui lòng thử lại!");
+            });
     });
 </script>

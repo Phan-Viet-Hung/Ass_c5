@@ -3,11 +3,18 @@ using C5.Models;
 using C5.Models.Momo;
 using C5.Service.Momo;
 using C5.Service.VNPay;
+using C5.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
+//MOMO API
+builder.Services.Configure<MomoOptionModel>(builder.Configuration.GetSection("MomoAPI"));
+builder.Services.AddScoped<IMomoService, MomoService>();
 TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
 TimeZoneInfo.ClearCachedData();
 CultureInfo cultureInfo = new CultureInfo("vi-VN");
@@ -15,9 +22,20 @@ CultureInfo cultureInfo = new CultureInfo("vi-VN");
 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
 CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 // Add services to the container.
-//MOMO API
-builder.Services.Configure<MomoOptionModel>(builder.Configuration.GetSection("MomoAPI"));
-builder.Services.AddScoped<IMomoService, MomoService>();
+// Thêm dịch vụ xác thực Google
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+})
+.AddCookie() // Cookie authentication để lưu phiên đăng nhập
+.AddGoogle(options =>
+{
+    options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+    options.CallbackPath = "/signin-google"; // Đảm bảo sử dụng đúng callback path
+
+});
 builder.Services.AddSignalR();
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<FastFoodDbContext>(options =>
@@ -49,6 +67,9 @@ builder.Services.AddCors(options =>
                         .AllowAnyMethod()
                         .AllowAnyHeader());
 });
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<CategoryService>();
+
 //VNPay API
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IVnPayService, VnPayService>();

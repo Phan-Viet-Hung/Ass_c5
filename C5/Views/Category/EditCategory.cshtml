@@ -10,16 +10,10 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="EditCategory">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
+        <form id="editCategoryForm">
+            <input type="hidden" id="categoryId" value="@Model.Id"> <!-- Lưu ID -->
+            <input type="text" id="categoryName" value="@Model.Name" required>
+            <button type="submit">Cập nhật</button>
         </form>
     </div>
 </div>
@@ -31,3 +25,40 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }
+<script>
+    document.getElementById("editCategoryForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        let categoryId = document.getElementById("categoryId").value;
+        let categoryName = document.getElementById("categoryName").value.trim();
+
+        if (!categoryId || !categoryName) {
+            alert("Vui lòng nhập đầy đủ thông tin!");
+            return;
+        }
+
+        let data = { id: categoryId, name: categoryName };
+
+        console.log("Sending data:", data); // Kiểm tra dữ liệu trước khi gửi
+
+        fetch(`https://localhost:7151/api/categoryapi/${categoryId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Lỗi: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert("Cập nhật danh mục thành công!");
+            window.location.href = "/Category/ListCategory"; // Chuyển về danh sách
+        })
+        .catch(error => {
+            console.error("Lỗi:", error);
+            alert("Có lỗi xảy ra, vui lòng thử lại!");
+        });
+    });
+</script>

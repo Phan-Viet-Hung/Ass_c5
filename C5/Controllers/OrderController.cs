@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.SignalR;
 using C5.Service.VNPay;
 using C5.Models.VNPay;
 using C5.Service.Momo;
+using Microsoft.IdentityModel.Tokens;
 
 namespace C5.Controllers
 {
@@ -99,6 +100,7 @@ namespace C5.Controllers
 
             return RedirectToAction(nameof(ListOrder));
         }
+
         [HttpPost]
         public async Task<IActionResult> CancelOrder(string orderId)
         {
@@ -121,6 +123,7 @@ namespace C5.Controllers
             TempData["Success"] = "Đơn hàng đã được hủy thành công.";
             return RedirectToAction("ListOrder");
         }
+
 
         public async Task<IActionResult> Checkout(string? VoucherCode)
         {
@@ -224,16 +227,28 @@ namespace C5.Controllers
                     UnitPrice = c.Product?.Price ?? c.Combo?.Price ?? 0
                 }).ToList()
             };
-            //if (PaymentMethod == "VNPay")
-            //{
-            //    var url = _vnPayService.CreatePaymentUrl(vnPayModel,HttpContext);
-
-            //    return Redirect(url);
-            //}
-            if(PaymentMethod == "MOMO")
+            if (PaymentMethod == "VNPay")
             {
+                var url = _vnPayService.CreatePaymentUrl(vnPayModel, HttpContext);
+
+                return Redirect(url);
+            }
+            if (PaymentMethod == "MOMO")
+            {
+                var paymentInfo = new OrderInfo
+                {
+                    OrderId = "order", // Hoặc giá trị phù hợp với hệ thống của bạn
+                    Amount = (double)order.FinalAmount,
+                    OrderInformation = $"Thanh toán đơn hàng {order.Id}",
+                    FullName = user.FullName // Hoặc một giá trị phù hợp
+                };
                 var response = await _momoService.CreatePaymentAsync(MomoModel);
-                return Redirect(response.PayUrl);
+                //if (response == null || response.PayUrl == null)
+                //{
+                //    TempData["Error"] = "Không thể tạo ra mã QR MOMO!";
+                //    return RedirectToAction("Checkout", "Order");
+                //}
+                    return Redirect(response.PayUrl);
             }
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
