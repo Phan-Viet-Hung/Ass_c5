@@ -81,6 +81,7 @@ namespace C5_API.Controllers
             _context.Products.Add(product);
             try
             {
+                
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateException)

@@ -10,6 +10,7 @@ using System.Globalization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
 //MOMO API
@@ -23,19 +24,32 @@ CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
 CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 // Add services to the container.
 // Thêm dịch vụ xác thực Google
+Env.Load(); // Load biến từ file .env
+
+var clientId = Env.GetString("CLIENT_ID");
+var clientSecret = Env.GetString("CLIENT_SECRET");
+var connectionString = Env.GetString("DATABASE_CONNECTION");
+
+Console.WriteLine($"Client ID: {clientId}"); // Kiểm tra xem đã lấy đúng chưa
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
 })
-.AddCookie() // Cookie authentication để lưu phiên đăng nhập
+.AddCookie()
 .AddGoogle(options =>
 {
-    options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
-    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
-    options.CallbackPath = "/signin-google"; // Đảm bảo sử dụng đúng callback path
+    options.ClientId = Environment.GetEnvironmentVariable("CLIENT_ID");
+    options.ClientSecret = Environment.GetEnvironmentVariable("CLIENT_SECRET");
 
+    options.CallbackPath = new PathString("/signin-google");
+    options.AuthorizationEndpoint = "https://accounts.google.com/o/oauth2/auth";
+    options.TokenEndpoint = "https://accounts.google.com/o/oauth2/token";
+    options.UserInformationEndpoint = "https://www.googleapis.com/oauth2/v2/userinfo";
+    options.SaveTokens = true;
 });
+
 builder.Services.AddSignalR();
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<FastFoodDbContext>(options =>
@@ -68,7 +82,7 @@ builder.Services.AddCors(options =>
                         .AllowAnyHeader());
 });
 builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddScoped<CategoryService>();
+
 
 //VNPay API
 builder.Services.AddHttpClient();

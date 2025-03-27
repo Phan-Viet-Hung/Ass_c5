@@ -1,27 +1,28 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using C5.Models;
-using C5.Service;
-using C5.Services;
 using C5.Data;
+using System;
 
 namespace C5.Controllers
 {
     public class CategoryController : Controller
     {
-        private readonly CategoryService _categoryService;
+        private readonly FastFoodDbContext _context;
 
-        public CategoryController(CategoryService service)
+        public CategoryController(FastFoodDbContext context)
         {
-            _categoryService = service;
+            _context = context;
         }
 
         // Hiển thị danh sách danh mục
         [HttpGet]
         public async Task<IActionResult> ListCategory()
         {
-            var categories = await _categoryService.GetAllCategories();
+            var categories = await _context.Categories.ToListAsync();
             return View(categories);
         }
 
@@ -42,30 +43,23 @@ namespace C5.Controllers
                 return View(category);
             }
 
-            var success = await _categoryService.CreateCategory(category);
-
-            if (!success)
-            {
-                ModelState.AddModelError("", "Lỗi khi thêm danh mục. API không phản hồi thành công.");
-                return View(category);
-            }
+            _context.Categories.Add(category);
+            await _context.SaveChangesAsync();
 
             TempData["Success"] = "Danh mục đã được thêm!";
             return RedirectToAction(nameof(ListCategory));
         }
 
-
         // Trang chỉnh sửa danh mục
         [HttpGet]
         public async Task<IActionResult> EditCategory(string id)
         {
-            var category = await _categoryService.GetCategoryById(id);
+            var category = await _context.Categories.FindAsync(id);
             if (category == null)
             {
                 TempData["Error"] = "Không tìm thấy danh mục.";
                 return RedirectToAction(nameof(ListCategory));
             }
-
             return View(category);
         }
 
@@ -75,12 +69,8 @@ namespace C5.Controllers
         {
             if (!ModelState.IsValid) return View(category);
 
-            var success = await _categoryService.UpdateCategory(category.Id, category);
-            if (!success)
-            {
-                ModelState.AddModelError("", "Lỗi khi cập nhật danh mục.");
-                return View(category);
-            }
+            _context.Categories.Update(category);
+            await _context.SaveChangesAsync();
 
             TempData["Success"] = "Danh mục đã được cập nhật!";
             return RedirectToAction(nameof(ListCategory));
@@ -89,12 +79,15 @@ namespace C5.Controllers
         // Xóa danh mục
         public async Task<IActionResult> DeleteCategory(string id)
         {
-            var success = await _categoryService.DeleteCategory(id);
-            if (!success)
+            var category = await _context.Categories.FindAsync(id);
+            if (category == null)
             {
-                TempData["Error"] = "Không thể xóa danh mục.";
+                TempData["Error"] = "Không thể tìm thấy danh mục.";
                 return RedirectToAction(nameof(ListCategory));
             }
+
+            _context.Categories.Remove(category);
+            await _context.SaveChangesAsync();
 
             TempData["Success"] = "Danh mục đã bị xóa.";
             return RedirectToAction(nameof(ListCategory));

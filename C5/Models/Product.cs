@@ -35,7 +35,7 @@ namespace C5.Models
         [Required]
         public bool IsActive { get; set; } = true; // Mặc định sản phẩm hoạt động
         [NotMapped]
-        public string StatusText
+        public string? StatusText
         {
             get
             {

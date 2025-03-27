@@ -67,7 +67,7 @@ namespace C5.Controllers
             var result = await _userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
-                await _userManager.AddToRoleAsync(user, "Customer");
+                await _userManager.AddToRoleAsync(user, "Admin");
 
                 // 🔹 Tạo giỏ hàng mới với cùng Id của User
                 var cart = new Cart
@@ -139,7 +139,7 @@ namespace C5.Controllers
             return RedirectToAction("Login");
         }
         [HttpPost]
-        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request, string returnUrl = "/")
         {
             try
             {
@@ -202,9 +202,13 @@ namespace C5.Controllers
 
         // Đăng xuất tài khoản
         [HttpPost]
-        public async Task<IActionResult> Logout()
+        public async Task<IActionResult> Logout(GoogleLoginRequest request)
         {
             await _signInManager.SignOutAsync();
+            if(request.Token != null)
+            {
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            }
             return RedirectToAction("Index", "Home");
         }
 
